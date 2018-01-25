@@ -172,4 +172,39 @@ namespace KnockoutHelpers
             return knockout;
         }
     }
+
+    public class MyModel
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+    }
+
+    public class demo
+    {
+        public void Asdf()
+        {
+            new KnockoutBuilder<MyModel>().For(m => m.Name).Attributes(88);
+
+        }
+    }
+
+    public class KnockoutBuilder<TModel> : IKnockoutBuilder<TModel> where TModel : class
+    {
+        public IKnockoutBuilder<TModel> For<TProperty>(Expression<Func<TModel, TProperty>> expression)
+        {
+
+            return this;
+        }
+
+        public IKnockoutBuilder<TModel> Attributes(object htmlAttributes)
+        {
+            return this;
+        }
+    }
+
+    public interface IKnockoutBuilder<TModel> where TModel : class
+    {
+        IKnockoutBuilder<TModel> For<TProperty>(Expression<Func<TModel, TProperty>> expression);
+        IKnockoutBuilder<TModel> Attributes(object htmlAttributes);
+    }
 }
