@@ -1,0 +1,8 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="$(TargetDir)KnockMvc.DTO.dll" #>
+<#@ assembly name="$(TargetDir)KnockMvc.Common.dll" #>
+<#@ assembly name="EnvDTE" #><# /* This assembly provides access to Visual Studio project properties. */ #>
+<#@ output extension=".ts" #>
+<# var serviceProvider = this.Host as IServiceProvider; #>
+<#= KnockMvc.Common.TypeScriptGenerateAttribute.GenerateJsFiles(typeof(KnockMvc.DTO.CustomClassData).Assembly, serviceProvider) #>

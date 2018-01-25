@@ -69,9 +69,16 @@
     <Compile Include="Attributes\PrecisionAttribute.cs" />
     <Compile Include="HtmlHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TableHelper\ColumnBuilder.cs" />
+    <Compile Include="TableHelper\FooterEnum.cs" />
+    <Compile Include="TableHelper\ITableBuilderOptions.cs" />
+    <Compile Include="TableHelper\ITableColumn.cs" />
+    <Compile Include="TableHelper\TableBuilder.cs" />
+    <Compile Include="TableHelper\TableColumn.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
