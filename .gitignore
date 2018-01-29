@@ -288,3 +288,4 @@ __pycache__/
 *.xsd.cs
 *.map
 /KnockoutMvcHelpers/KnockMvc.Web/Scripts/KnockTable/KnockTable.js
+/KnockoutMvcHelpers/KnockMvc.Web/Scripts/GridSample.js

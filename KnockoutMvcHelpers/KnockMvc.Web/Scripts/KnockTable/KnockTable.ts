@@ -24,9 +24,32 @@
         onRowSaved: (row: Row<TRowData>, e) => void;
         onRowDeleted: (row: Row<TRowData>, e) => void;
 
-        addRow(rowData: TRowData) {
+        //onLoad
+        //onLoadMore
+        //onRowAdd
+        //onRowEdit
+        //onRowDelete
+        //onFilter
+        //onSort
+        //onPaging
+        
+
+        addRow = (rowData: TRowData) => {
             var row = new Row(rowData);
             this.Rows.push(row);
+        }
+
+        addRows = (rowData: TRowData[]) => {
+            var underlyingArray = this.Rows();
+            this.Rows.valueWillMutate();
+
+            let observableRows: Row<TRowData>[];
+            ko.utils.arrayForEach(rowData, (row) => {
+                observableRows.push(new Row(row));
+            });
+
+            ko.utils.arrayPushAll(underlyingArray, observableRows);
+            this.Rows.valueHasMutated();
         }
 
         removeAllRows = () => {
