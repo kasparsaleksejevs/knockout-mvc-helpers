@@ -1,49 +1,4 @@
-﻿class MyViewModel {
-
-    Rows = ko.observableArray<MyRow>([]);
-
-    constructor() {
-        this.load();
-    }
-
-    load = () => {
-        $.getJSON('/api/Grid', (rows: IMyRow[]) => {
-            ko.mapping.fromJS(rows, {}, this.Rows);
-        });
-    }
-
-    createNew_click = () => {
-
-    }
-
-    edit_click = () => {
-
-    }
-
-    remove_click = () => {
-
-    }
-
-    addRow = () => {
-        // we don't know the Id, so Post it
-        $.post('api/Grid');
-        
-    }
-
-    updateRow = (id: number | string) => {
-        // we know the Id, so we Put it 
-        $.put('api/Grid/' + id);
-    }
-
-    removeRow = () => {
-        $.delete('api/Grid');
-    }
-
-}
-
-ko.applyBindings(new MyViewModel());
-
-class MyRow {
+﻿class MyRow {
     IntValue = ko.observable<number>();
     DoubleValue = ko.observable<number>();
     DecimalValue = ko.observable<number>();
@@ -62,6 +17,10 @@ class MyRow {
             this.DateValue(p.DateValue);
             this.EnumValue(p.EnumValue);
         }
+        else {
+            // default values
+            this.IntValue(1);
+        }
     }
 }
 
@@ -78,6 +37,93 @@ interface IMyRow {
     BoolValue: boolean;
     DateValue: Date;
     EnumValue: number;
+}
+
+class MyViewModel<TRowType> {
+
+    Rows = ko.observableArray<TRowType>([]);
+    ModalViewModel = ko.observable<TRowType>();
+    deleteUrl: string;
+    addOrUpdateUrl: string;
+
+    constructor(private rowType: new () => TRowType) {
+        this.load();
+    }
+
+    load = () => {
+        $.getJSON('/api/Grid', (rows: IMyRow[]) => {
+            ko.mapping.fromJS(rows, {}, this.Rows);
+        });
+    }
+
+    createNew_click = () => {
+        this.ModalViewModel(this.getNewRow());
+        $('#myModal').modal('show');
+    }
+
+    edit_click = (row: TRowType) => {
+        this.ModalViewModel(ko.mapping.fromJS(ko.toJS(row)));
+        $('#myModal').modal('show');
+    }
+
+    remove_click = (row: TRowType) => {
+        // + confirmation (?)
+        this.removeRow(row);
+    }
+
+    addRow = () => {
+        // we don't know the Id, so Post it
+        ////$.post('api/Grid');
+
+    }
+
+    updateRow = (id: number | string) => {
+        // we know the Id, so we Put it 
+        ////$.put('api/Grid/' + id);
+    }
+
+    removeRow = (row: TRowType) => {
+        ////$.delete('api/Grid');
+        this.Rows.remove(row);
+    }
+
+    fadeOutItem = function (node) {
+        //if (!ignoreRowChangeEffect)
+        $(node).css('background-color', '#FFBFBF').fadeOut('slow', function () { $(node).remove(); });
+        //else
+        //    $(node).remove();
+    }
+
+    fadeInItem = function (node) {
+        //if (!ignoreRowChangeEffect)
+        //$(node).hide().css('background-color', '#DDFFE6').fadeIn('slow');
+    }
+
+    private getNewRow(): TRowType {
+        return new this.rowType();
+    }
+}
+
+ko.applyBindings(new MyViewModel<MyRow>(MyRow));
+
+function ShowWait(parentObj) {
+    if (parentObj === undefined)
+        parentObj = $('#wrap');
+
+    var objPosition = parentObj.offset();
+    $('.wait-modal').css({
+        display: 'block',
+        top: objPosition.top,
+        left: objPosition.left,
+        width: parentObj.width() + 'px',
+        height: parentObj.height() + 'px'
+    });
+}
+
+function HideWait() {
+    $('.wait-modal').css({
+        display: 'none'
+    });
 }
 
 // === jQuery extensions: =================================
