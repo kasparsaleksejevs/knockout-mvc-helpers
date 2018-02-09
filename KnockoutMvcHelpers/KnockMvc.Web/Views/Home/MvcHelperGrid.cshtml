@@ -1,0 +1,28 @@
+﻿@{
+    ViewBag.Title = "About";
+}
+@model List<KnockMvc.DTO.MyRow>
+@{
+    ViewBag.Title = "About";
+}
+
+<style>
+    .test-class-green {
+        background-color: #91fcb4;
+    }
+
+    .test-class-red {
+        background-color: #fc9191;
+    }
+</style>
+
+@Html.TableFor(Model).Columns(col =>
+{
+    col.Bind(m => m.StringValue).IsHeader();
+    col.Bind(m => m.BoolValue).TrueFalse("Yes", "No");
+    col.Bind(m => m.IntValue).NoTitle().HeaderClass("test-class-red");
+    col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right");
+    col.Bind(m => m.DecimalValue).Format("N2").CssClass("text-right");
+    col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss");
+    col.Bind(m => m.EnumValue);
+})

@@ -45,6 +45,7 @@ class MyViewModel<TRowType> {
     ModalViewModel = ko.observable<TRowType>();
     deleteUrl: string;
     addOrUpdateUrl: string;
+    ignoreRowChangeEffect: boolean;
 
     constructor(private rowType: new () => TRowType) {
         this.load();
@@ -52,7 +53,9 @@ class MyViewModel<TRowType> {
 
     load = () => {
         $.getJSON('/api/Grid', (rows: IMyRow[]) => {
+            this.ignoreRowChangeEffect = true;
             ko.mapping.fromJS(rows, {}, this.Rows);
+            this.ignoreRowChangeEffect = false;
         });
     }
 
@@ -87,16 +90,16 @@ class MyViewModel<TRowType> {
         this.Rows.remove(row);
     }
 
-    fadeOutItem = function (node) {
-        //if (!ignoreRowChangeEffect)
-        $(node).css('background-color', '#FFBFBF').fadeOut('slow', function () { $(node).remove(); });
-        //else
-        //    $(node).remove();
+    rowFadeOut = (node) => {
+        if (!this.ignoreRowChangeEffect)
+            $(node).css('background-color', '#FFBFBF').fadeOut('slow', function () { $(node).remove(); });
+        else
+            $(node).remove();
     }
 
-    fadeInItem = function (node) {
-        //if (!ignoreRowChangeEffect)
-        //$(node).hide().css('background-color', '#DDFFE6').fadeIn('slow');
+    rowFadeIn = (node) => {
+        if (!this.ignoreRowChangeEffect)
+            $(node).hide().css('background-color', '#DDFFE6').fadeIn('slow');
     }
 
     private getNewRow(): TRowType {
