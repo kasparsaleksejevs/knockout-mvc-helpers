@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace KnockMvc.Web.Helpers.TableHelper
+namespace KnockMvc.TableHelper
 {
     public class ColumnBuilder<TModel> where TModel : class
     {
@@ -20,7 +20,7 @@ namespace KnockMvc.Web.Helpers.TableHelper
 
         public ColumnPropertyBuilder<TModel, TProperty> Bind<TProperty>(Expression<Func<TModel, TProperty>> expression)
         {
-            this.column = new TableColumn<TModel, TProperty>(expression);
+            this.column = new TableColumn<TModel, TProperty>(expression, this.tableBuilder.Model);
             this.tableBuilder.AddColumn<TProperty>(this.column);
 
             return new ColumnPropertyBuilder<TModel, TProperty>(this, this.column);

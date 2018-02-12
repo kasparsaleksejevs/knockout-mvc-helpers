@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web;
 
-namespace KnockMvc.Web.Helpers.TableHelper
+namespace KnockMvc.TableHelper
 {
     public interface ITableBuilderOptions<TModel> : IHtmlString where TModel : class
     {

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 
-namespace KnockMvc.Web.Helpers.TableHelper
+namespace KnockMvc.TableHelper
 {
     /// <summary>    
     /// Properties and methods used within the TableBuilder class.    
@@ -13,10 +14,6 @@ namespace KnockMvc.Web.Helpers.TableHelper
 
         Type ColumnType { get; set; }
 
-        FooterEnum FooterData { get; set; }
-
-        string Evaluate(TModel model);
-
         string Format { get; set; }
 
         string HeaderCssClass { get; set; }
@@ -25,10 +22,16 @@ namespace KnockMvc.Web.Helpers.TableHelper
 
         bool IsHeader { get; set; }
 
-        bool NoTitle { get; set; }
+        string Template { get; set; }
 
         string BooleanTrueValue { get; set; }
 
         string BooleanFalseValue { get; set; }
+
+        string Evaluate(TModel model);
+
+        string EvaluateFooter(ICollection<TModel> model);
+
+        Func<ICollection<TModel>, object> FooterExpression { get; set; }
     }
 }

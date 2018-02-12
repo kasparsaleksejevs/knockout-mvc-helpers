@@ -1,9 +1,6 @@
-﻿@{
-    ViewBag.Title = "About";
-}
-@model List<KnockMvc.DTO.MyRow>
+﻿@model List<KnockMvc.DTO.MyRow>
 @{
-    ViewBag.Title = "About";
+    ViewBag.Title = "MVC HTML Grid";
 }
 
 <style>
@@ -20,9 +17,10 @@
 {
     col.Bind(m => m.StringValue).IsHeader();
     col.Bind(m => m.BoolValue).TrueFalse("Yes", "No");
-    col.Bind(m => m.IntValue).NoTitle().HeaderClass("test-class-red");
-    col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right");
+    col.Bind(m => m.IntValue).Title("Not original INT!").HeaderClass("test-class-red");
+    col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right").Template("{value}<sup>2</sup>");
     col.Bind(m => m.DecimalValue).Format("N2").CssClass("text-right");
-    col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss");
-    col.Bind(m => m.EnumValue);
+    col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss").Footer(z => "INT sum = " + Model.Sum(s => s.IntValue).ToString());
+    col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
+    col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int");
 })

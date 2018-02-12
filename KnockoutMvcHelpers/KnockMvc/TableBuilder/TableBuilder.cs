@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Web.Mvc;
 
-namespace KnockMvc.Web.Helpers.TableHelper
+namespace KnockMvc.TableHelper
 {
     public class TableBuilder<TModel> : ITableBuilderOptions<TModel> where TModel : class
     {
@@ -12,12 +12,12 @@ namespace KnockMvc.Web.Helpers.TableHelper
 
         private HtmlHelper htmlHelper;
 
-        private ICollection<TModel> model;
+        internal ICollection<TModel> Model { get; set; }
 
         public TableBuilder(HtmlHelper html, ICollection<TModel> model)
         {
             this.htmlHelper = html;
-            this.model = model;
+            this.Model = model;
         }
 
         /// <summary>
@@ -54,35 +54,39 @@ namespace KnockMvc.Web.Helpers.TableHelper
             foreach (var column in this.columns)
             {
                 var cssClass = column.HeaderCssClass != null ? $" class=\"{column.HeaderCssClass}\"" : string.Empty;
-                headRow += $"<th{cssClass}>{(column.NoTitle ? "&nbsp;" : column.ColumnTitle)}</th>";
+                headRow += $"<th{cssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? "&nbsp;" : column.ColumnTitle)}</th>";
             }
 
             var bodyRows = string.Empty;
-            foreach (var row in this.model)
+            foreach (var row in this.Model)
             {
                 var bodyRow = string.Empty;
                 foreach (var column in this.columns)
                 {
                     var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
 
+                    var cellValue = column.Evaluate(row);
+                    if (!string.IsNullOrEmpty(column.Template))
+                        cellValue = column.Template.Replace("{value}", cellValue);
+
                     if (column.IsHeader)
-                        bodyRow += $"<th{cssClass}>{column.Evaluate(row)}</th>";
+                        bodyRow += $"<th{cssClass}>{cellValue}</th>";
                     else
-                        bodyRow += $"<td{cssClass}>{column.Evaluate(row)}</td>";
+                        bodyRow += $"<td{cssClass}>{cellValue}</td>";
                 }
 
                 bodyRows += $"<tr>{bodyRow}</tr>";
             }
 
             var footer = string.Empty;
-            var hasFooter = this.columns.Any(m => m.FooterData != FooterEnum.None);
+            var hasFooter = this.columns.Any(m => m.FooterExpression != null);
             if (hasFooter)
             {
                 var canSpan = true;
                 var spanValue = 0;
                 for (int i = 0; i < colCount; i++)
                 {
-                    if (this.columns[i].FooterData == FooterEnum.Total)
+                    if (this.columns[i].FooterExpression != null)
                     {
                         if (canSpan)
                         {
@@ -90,7 +94,7 @@ namespace KnockMvc.Web.Helpers.TableHelper
                             canSpan = false;
                         }
 
-                        footer += $"<td>{this.columns[i].ColumnName}</td>";
+                        footer += $"<td>{this.columns[i].EvaluateFooter(this.Model)}</td>";
                     }
                     else
                     {
@@ -125,7 +129,7 @@ namespace KnockMvc.Web.Helpers.TableHelper
 
         internal void AddColumn<TProperty>(Expression<Func<TModel, TProperty>> expression)
         {
-            var column = new TableColumn<TModel, TProperty>(expression);
+            var column = new TableColumn<TModel, TProperty>(expression, this.Model);
             this.columns.Add(column);
         }
 
