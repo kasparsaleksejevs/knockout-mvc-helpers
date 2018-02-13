@@ -18,6 +18,9 @@ namespace KnockMvc.DTO
         [Display(Name = "Decimal...")]
         public decimal DecimalValue { get; set; }
 
+        [Display(Name = "Nullable Dec")]
+        public decimal? NullableDecimalValue { get; set; }
+
         [Display(Name = "String!")]
         public string StringValue { get; set; }
 

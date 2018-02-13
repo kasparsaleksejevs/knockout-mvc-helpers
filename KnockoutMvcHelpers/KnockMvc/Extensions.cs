@@ -26,7 +26,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<int>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(int);
             return builder;
         }
 
@@ -34,7 +34,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<int?>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(int?);
             return builder;
         }
 
@@ -42,7 +42,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<double>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(double);
             return builder;
         }
 
@@ -50,7 +50,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<double?>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(double?);
             return builder;
         }
 
@@ -58,7 +58,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<decimal>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(decimal);
             return builder;
         }
 
@@ -66,7 +66,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<decimal?>();
-            tableColumn.FooterExpression = (m) => m.Sum(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Sum(expression) : default(decimal?);
             return builder;
         }
 
@@ -74,7 +74,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<int>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(int);
             return builder;
         }
 
@@ -82,7 +82,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<int?>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(int?);
             return builder;
         }
 
@@ -90,7 +90,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<double>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(double);
             return builder;
         }
 
@@ -98,7 +98,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<double?>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(double?);
             return builder;
         }
 
@@ -106,7 +106,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<decimal>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(decimal);
             return builder;
         }
 
@@ -114,7 +114,7 @@ namespace KnockMvc
         {
             var tableColumn = builder.Column;
             var expression = tableColumn.GetValueExpression<decimal?>();
-            tableColumn.FooterExpression = (m) => m.Average(expression);
+            tableColumn.FooterExpression = (m) => m.Any() ? m.Average(expression) : default(decimal?);
             return builder;
         }
     }

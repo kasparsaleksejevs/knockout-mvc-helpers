@@ -23,4 +23,5 @@
     col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss").Footer(z => "INT sum = " + Model.Sum(s => s.IntValue).ToString());
     col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int");
+    col.Bind(m => m.NullableDecimalValue).FooterAvg();
 })
