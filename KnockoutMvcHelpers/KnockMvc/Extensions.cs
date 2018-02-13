@@ -5,6 +5,14 @@ namespace KnockMvc
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Sets the True/False textual values to display for <seealso cref="bool"/> columns.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the model.</typeparam>
+        /// <param name="builder">The column property builder.</param>
+        /// <param name="trueValue">The text to display when the table cells value is <c>true</c>.</param>
+        /// <param name="falseValue">The text to display when the table cells value is <c>false</c>.</param>
+        /// <returns>Column property builder instance.</returns>
         public static ColumnPropertyBuilder<TModel, bool?> TrueFalse<TModel>(this ColumnPropertyBuilder<TModel, bool?> builder, string trueValue, string falseValue) where TModel : class
         {
             var tableColumn = builder.Column;
@@ -14,6 +22,14 @@ namespace KnockMvc
             return builder;
         }
 
+        /// <summary>
+        /// Sets the True/False textual values to display for <seealso cref="bool"/> columns.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the model.</typeparam>
+        /// <param name="builder">The column property builder.</param>
+        /// <param name="trueValue">The text to display when the table cells value is <c>true</c>.</param>
+        /// <param name="falseValue">The text to display when the table cells value is <c>false</c>.</param>
+        /// <returns>Column property builder instance.</returns>
         public static ColumnPropertyBuilder<TModel, bool> TrueFalse<TModel>(this ColumnPropertyBuilder<TModel, bool> builder, string trueValue, string falseValue) where TModel : class
         {
             var tableColumn = builder.Column;
