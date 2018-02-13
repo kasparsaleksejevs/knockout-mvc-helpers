@@ -94,7 +94,12 @@ namespace KnockMvc.TableHelper
                             canSpan = false;
                         }
 
-                        footer += $"<td>{this.columns[i].EvaluateFooter(this.Model)}</td>";
+                        var cellValue = this.columns[i].EvaluateFooter(this.Model);
+                        if (!string.IsNullOrEmpty(this.columns[i].Template))
+                            cellValue = this.columns[i].Template.Replace("{value}", cellValue);
+
+                        var cssClass = this.columns[i].CssClass != null ? $" class=\"{this.columns[i].CssClass}\"" : string.Empty;
+                        footer += $"<td{cssClass}>{cellValue}</td>";
                     }
                     else
                     {

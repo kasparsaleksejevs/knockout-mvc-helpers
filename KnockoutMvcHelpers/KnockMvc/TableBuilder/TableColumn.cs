@@ -32,7 +32,7 @@ namespace KnockMvc.TableHelper
         /// <summary>
         /// Compiled lambda expression to get the property value from a model object.
         /// </summary>
-        public Func<TModel, TProperty> RowValueExpression { get; set; }
+        public Func<TModel, TProperty> ValueExpression { get; set; }
 
         public Func<ICollection<TModel>, object> FooterExpression { get; set; }
 
@@ -79,7 +79,7 @@ namespace KnockMvc.TableHelper
                 this.ColumnType = expression.ReturnType;
             }
 
-            this.RowValueExpression = expression.Compile();
+            this.ValueExpression = expression.Compile();
         }
 
         /// <summary>    
@@ -89,74 +89,40 @@ namespace KnockMvc.TableHelper
         /// <returns>Property value from the model.</returns>    
         public string Evaluate(TModel model)
         {
-            var value = this.RowValueExpression(model);
+            var value = this.ValueExpression(model);
             if (value == null)
                 return null;
 
-            return this.EvaluateInternal(value);
+            return this.EvaluateInternal(value, this.Format);
         }
 
         public string EvaluateFooter(ICollection<TModel> model)
         {
-            var value = this.FooterExpression(this.model);
-            if (value == null)
+            var property = this.FooterExpression(this.model);
+            if (property == null)
                 return null;
 
-            return this.EvaluateInternalFooter(value);
+            string format = null;
+            var columnType = property.GetType();
+            if (columnType == this.ColumnType)
+                format = this.Format;
+
+            return this.EvaluateInternal(property, format);
         }
 
-        private string EvaluateInternal(object property)
+        private string EvaluateInternal(object property, string format)
         {
-            var columnType = this.ColumnType;
-
-            var result = string.Empty;
-            if (columnType == typeof(int) || columnType == typeof(int?))
-                result = (property as int?)?.ToString(this.Format);
-            else if (columnType == typeof(decimal) || columnType == typeof(decimal?))
-                result = (property as decimal?)?.ToString(this.Format);
-            else if (columnType == typeof(double) || columnType == typeof(double?))
-                result = (property as double?)?.ToString(this.Format);
-            else if (columnType == typeof(DateTime) || columnType == typeof(DateTime?))
-                result = (property as DateTime?)?.ToString(this.Format);
-            else if (columnType == typeof(bool) || columnType == typeof(bool?))
-                result = (property as bool?) == true ? this.BooleanTrueValue : this.BooleanFalseValue;
-            else if (columnType.IsEnum)
-            {
-                var displayAttr = columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) as DisplayAttribute;
-                if (displayAttr != null)
-                    result = displayAttr.Name;
-                else
-                {
-                    // for legacy MVC3+ projects the DescriptionAttribute is usually used
-                    var descriptionAttr = columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) as DescriptionAttribute;
-                    if (descriptionAttr != null)
-                        result = descriptionAttr.Description;
-                    else
-                        result = property.ToString();
-                }
-            }
-            else
-                result = property.ToString();
-
-            return result;
-        }
-
-
-        private string EvaluateInternalFooter(object property)
-        {
-            // ToDo: custom formatting?
-
             var columnType = property.GetType();
 
             var result = string.Empty;
             if (columnType == typeof(int) || columnType == typeof(int?))
-                result = (property as int?)?.ToString();
+                result = (property as int?)?.ToString(format);
             else if (columnType == typeof(decimal) || columnType == typeof(decimal?))
-                result = (property as decimal?)?.ToString();
+                result = (property as decimal?)?.ToString(format);
             else if (columnType == typeof(double) || columnType == typeof(double?))
-                result = (property as double?)?.ToString();
+                result = (property as double?)?.ToString(format);
             else if (columnType == typeof(DateTime) || columnType == typeof(DateTime?))
-                result = (property as DateTime?)?.ToString();
+                result = (property as DateTime?)?.ToString(format);
             else if (columnType == typeof(bool) || columnType == typeof(bool?))
                 result = (property as bool?) == true ? this.BooleanTrueValue : this.BooleanFalseValue;
             else if (columnType.IsEnum)
@@ -178,6 +144,12 @@ namespace KnockMvc.TableHelper
                 result = property.ToString();
 
             return result;
+        }
+
+        public Func<TModel, TExpression> GetValueExpression<TExpression>()
+        {
+            var x = this.ValueExpression as Func<TModel, TExpression>;
+            return x;
         }
     }
 }

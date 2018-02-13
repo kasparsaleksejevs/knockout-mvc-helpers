@@ -33,5 +33,7 @@ namespace KnockMvc.TableHelper
         string EvaluateFooter(ICollection<TModel> model);
 
         Func<ICollection<TModel>, object> FooterExpression { get; set; }
+
+        Func<TModel, TExpression> GetValueExpression<TExpression>();
     }
 }
