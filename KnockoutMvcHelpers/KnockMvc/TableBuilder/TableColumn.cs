@@ -103,8 +103,15 @@ namespace KnockMvc.TableHelper
                 return null;
 
             string format = null;
-            var columnType = property.GetType();
-            if (columnType == this.ColumnType)
+            var columnType = Nullable.GetUnderlyingType(property.GetType());
+            if (columnType == null)
+                columnType = property.GetType();
+
+            var originalColumnType = Nullable.GetUnderlyingType(this.ColumnType);
+            if (originalColumnType == null)
+                originalColumnType = this.ColumnType;
+
+            if (columnType == originalColumnType)
                 format = this.Format;
 
             return this.EvaluateInternal(property, format);
