@@ -12,6 +12,10 @@ namespace KnockMvc.TableHelper
 
         private HtmlHelper htmlHelper;
 
+        private string tableCss;
+
+        private string footerText;
+
         internal ICollection<TModel> Model { get; set; }
 
         public TableBuilder(HtmlHelper html, ICollection<TModel> model)
@@ -67,7 +71,7 @@ namespace KnockMvc.TableHelper
 
                     var cellValue = column.Evaluate(row);
                     if (!string.IsNullOrEmpty(column.Template))
-                        cellValue = column.Template.Replace("{value}", cellValue);
+                        cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
                     if (column.IsHeader)
                         bodyRow += $"<th{cssClass}>{cellValue}</th>";
@@ -82,32 +86,75 @@ namespace KnockMvc.TableHelper
             var hasFooter = this.columns.Any(m => m.FooterExpression != null);
             if (hasFooter)
             {
-                var canSpan = true;
-                var spanValue = 0;
+                var spanSize = 0;
+                var footerTextAdded = false;
+                var footerText = this.footerText;
+                if (string.IsNullOrWhiteSpace(this.footerText))
+                    footerText = "&nbsp;";
+
                 for (int i = 0; i < colCount; i++)
                 {
+                    var cssClass = this.columns[i].FooterCssClass != null ? $" class=\"{this.columns[i].FooterCssClass}\"" : string.Empty;
+                    if (string.IsNullOrEmpty(cssClass))
+                        cssClass = this.columns[i].CssClass != null ? $" class=\"{this.columns[i].CssClass}\"" : string.Empty;
+
                     if (this.columns[i].FooterExpression != null)
                     {
-                        if (canSpan)
+                        if (spanSize > 0)
                         {
-                            footer += $"<td colspan=\"{spanValue}\">Total:</td>";
-                            canSpan = false;
+                            footer += $"<td colspan=\"{spanSize}\">{footerText}</td>";
+
+                            // ensure that we don't add footer text multiple times
+                            if (!footerTextAdded)
+                            {
+                                footerTextAdded = true;
+                                footerText = "&nbsp;";
+                            }
+
+                            spanSize = 0;
                         }
 
                         var cellValue = this.columns[i].EvaluateFooter(this.Model);
                         if (!string.IsNullOrEmpty(this.columns[i].Template))
-                            cellValue = this.columns[i].Template.Replace("{value}", cellValue);
+                            cellValue = this.columns[i].Template.Replace(this.columns[i].TemplateSpecifier, cellValue);
 
-                        var cssClass = this.columns[i].CssClass != null ? $" class=\"{this.columns[i].CssClass}\"" : string.Empty;
                         footer += $"<td{cssClass}>{cellValue}</td>";
                     }
                     else
                     {
-                        if (canSpan)
-                            spanValue++;
+                        if (!string.IsNullOrEmpty(this.columns[i].CssClass)
+                            || !string.IsNullOrEmpty(this.columns[i].FooterCssClass))
+                        {
+                            if (spanSize > 0)
+                            {
+                                footer += $"<td colspan=\"{spanSize}\">{footerText}</td>";
+
+                                // ensure that we don't add footer text multiple times
+                                if (!footerTextAdded)
+                                {
+                                    footerTextAdded = true;
+                                    footerText = "&nbsp;";
+                                }
+
+                                spanSize = 0;
+                            }
+
+                            footer += $"<td{cssClass}>{footerText}</td>";
+
+                            // ensure that we don't add footer text multiple times
+                            if (!footerTextAdded)
+                            {
+                                footerTextAdded = true;
+                                footerText = "&nbsp;";
+                            }
+                        }
                         else
                         {
-                            footer += "<td>&nbsp;</td>";
+                            spanSize++;
+
+                            // add empty footer for the last column
+                            if (i == colCount - 1)
+                                footer += $"<td colspan=\"{spanSize}\">&nbsp;</td>";
                         }
                     }
                 }
@@ -115,7 +162,7 @@ namespace KnockMvc.TableHelper
                 footer = $"<tfoot><tr>{footer}</tr></tfoot>";
             }
 
-            var table = $"<table class=\"table table-striped table-bordered table-hover table-condensed\"><thead><tr>{headRow}</tr></thead>{footer}<tbody>{bodyRows}</tbody></table>";
+            var table = $"<table class=\"{this.tableCss}\"><thead><tr>{headRow}</tr></thead>{footer}<tbody>{bodyRows}</tbody></table>";
 
             return table;
         }
@@ -127,9 +174,16 @@ namespace KnockMvc.TableHelper
             return this;
         }
 
-        public ITableBuilderOptions<TModel> Attributes(object htmlAttributes)
+        public ITableBuilderOptions<TModel> FooterText(string footerText)
         {
-            throw new NotImplementedException();
+            this.footerText = footerText;
+            return this;
+        }
+
+        public ITableBuilderOptions<TModel> Css(string cssClass)
+        {
+            this.tableCss = cssClass;
+            return this;
         }
 
         internal void AddColumn<TProperty>(Expression<Func<TModel, TProperty>> expression)

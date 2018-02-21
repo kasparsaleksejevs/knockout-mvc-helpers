@@ -7,6 +7,10 @@ namespace KnockMvc.TableHelper
     {
         ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builder);
 
-        ITableBuilderOptions<TModel> Attributes(object htmlAttributes);
+        //ITableBuilderOptions<TModel> Attributes(object htmlAttributes);
+
+        ITableBuilderOptions<TModel> FooterText(string footerText);
+
+        ITableBuilderOptions<TModel> Css(string cssClass);
     }
 }

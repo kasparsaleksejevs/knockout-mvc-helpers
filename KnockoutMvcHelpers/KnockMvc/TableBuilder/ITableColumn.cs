@@ -20,9 +20,13 @@ namespace KnockMvc.TableHelper
 
         string CssClass { get; set; }
 
+        string FooterCssClass { get; set; }
+
         bool IsHeader { get; set; }
 
         string Template { get; set; }
+
+        string TemplateSpecifier { get; set; }
 
         string BooleanTrueValue { get; set; }
 

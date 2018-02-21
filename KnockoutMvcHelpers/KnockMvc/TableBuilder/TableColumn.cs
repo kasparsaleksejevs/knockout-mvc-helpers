@@ -42,6 +42,8 @@ namespace KnockMvc.TableHelper
 
         public string CssClass { get; set; }
 
+        public string FooterCssClass { get; set; }
+
         public bool IsHeader { get; set; }
 
         public string BooleanTrueValue { get; set; } = true.ToString();
@@ -49,6 +51,8 @@ namespace KnockMvc.TableHelper
         public string BooleanFalseValue { get; set; } = false.ToString();
 
         public string Template { get; set; }
+
+        public string TemplateSpecifier { get; set; } = "{value}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TableColumn{TModel, TProperty}"/> class.

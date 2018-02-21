@@ -29,7 +29,7 @@ namespace KnockMvc.TableHelper
         }
 
         /// <summary>
-        /// Applies specifiec CSS class to the thead > tr > th.
+        /// Applies specific CSS class to the 'thead > tr > th' for this column.
         /// </summary>
         /// <param name="cssClasses">The CSS classes to apply.</param>
         /// <returns>Column builder instance.</returns>
@@ -40,13 +40,24 @@ namespace KnockMvc.TableHelper
         }
 
         /// <summary>
-        /// Applies specifiec CSS class to the tbody > tr > td.
+        /// Applies specific CSS class to the 'tbody > tr > td' for this column.
         /// </summary>
         /// <param name="cssClasses">The CSS classes to apply.</param>
         /// <returns>Column builder instance.</returns>
         public ColumnPropertyBuilder<TModel, TProperty> CssClass(string cssClasses)
         {
             this.Column.CssClass = cssClasses;
+            return this;
+        }
+
+        /// <summary>
+        /// Applies specific CSS class to the 'tfoot > tr > td' for this column.
+        /// </summary>
+        /// <param name="cssClasses">The CSS classes.</param>
+        /// <returns>Column builder instance.</returns>
+        public ColumnPropertyBuilder<TModel, TProperty> FooterCssClass(string cssClasses)
+        {
+            this.Column.FooterCssClass = cssClasses;
             return this;
         }
 
@@ -62,7 +73,7 @@ namespace KnockMvc.TableHelper
 
         /// <summary>
         /// Applies a custom title to the column.
-        /// Therefore any <seealso cref="DisplayNameAttribute"/> or <seealso cref="DescriptionAttribute "/> will be ignored.
+        /// Therefore any <seealso cref="DisplayNameAttribute"/> or <seealso cref="DescriptionAttribute "/> specified for the column property will be ignored.
         /// </summary>
         /// <param name="customTitle">The custom title.</param>
         /// <returns>Column builder instance.</returns>
@@ -73,7 +84,8 @@ namespace KnockMvc.TableHelper
         }
 
         /// <summary>
-        /// Applies template to use to render column value.
+        /// Applies template to use to render the columns value.
+        /// By default, the column property value replaces <c>{value}</c> string, but this can be changed using <see cref="TemplateSpecifier(string)" />.
         /// </summary>
         /// <param name="template">The template.</param>
         /// <returns>Column builder instance.</returns>
@@ -83,11 +95,14 @@ namespace KnockMvc.TableHelper
             return this;
         }
 
-        /// <param name="templateSpecifier">The template specifier. The default is <c>{value}</c></param>
+        /// <summary>
+        /// Specifies custom replacement string for the template.
+        /// </summary>
+        /// <param name="templateSpecifier">The custom template specifier. The default is <c>{value}</c>.</param>
         /// <returns>Column builder instance.</returns>
         public ColumnPropertyBuilder<TModel, TProperty> TemplateSpecifier(string templateSpecifier)
         {
-            //this.column.Template = template;
+            this.Column.TemplateSpecifier = templateSpecifier;
             return this;
         }
     }
