@@ -28,6 +28,28 @@
     .footer-orange {
         background-color: orange;
     }
+
+    .customColumnTable > tbody > tr > th:nth-child(4) {
+        border-top: 3px solid #fc9191 !important;
+        border-left: 3px solid #fc9191 !important;
+        border-right: 3px solid #fc9191 !important;
+    }
+
+    .customColumnTable > tbody > tr > td:nth-child(4) {
+        border-left: 3px solid #fc9191 !important;
+        border-right: 3px solid #fc9191 !important;
+    }
+
+    .customColumnTable > tbody > tr:last-child > td:nth-child(4) {
+        border-left: 3px solid #fc9191 !important;
+        border-right: 3px solid #fc9191 !important;
+        border-bottom: 3px solid #fc9191 !important;
+    }
+
+    .sideways {
+        vertical-align: middle;
+        transform: rotate(-90deg);
+    }
 </style>
 
 @Html.TableFor(Model).Css("table table-striped table-bordered table-hover table-condensed").Columns(col =>
@@ -38,7 +60,22 @@
     col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right").Template("{value}<sup>%</sup>").Format("P2").Footer(f => f.Sum(s => s.DoubleValue));
     col.Bind(m => m.DecimalValue).Format("N2").CssClass("text-right").FooterAvg().Template("{value}x");
     col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss").Footer(z => "INT sum = " + Model.Sum(s => s.IntValue).ToString()).HeaderClass("borderz").CssClass("borderz");
+    col.AddSpacer("some spacing").CssClass("text-center sideways");
     col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
+    col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
+    col.Bind(m => m.NullableDecimalValue);
+}).FooterText("Total:")
+
+@Html.TableFor(Model).UseColumnsAsRows().Css("table table-striped table-bordered table-hover table-condensed customColumnTable").Columns(col =>
+{
+    col.Bind(m => m.StringValue).IsHeader();
+    col.Bind(m => m.BoolValue).TrueFalse("Yes", "No");
+    col.Bind(m => m.IntValue).Title("Not original INT!").HeaderClass("test-class-red").FooterSum();
+    col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right").Template("{value}<sup>%</sup>").Format("P2").Footer(f => f.Sum(s => s.DoubleValue));
+    col.Bind(m => m.DecimalValue).Format("N2").CssClass("text-right").FooterAvg().Template("{value}x");
+    col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss").Footer(z => "INT sum = " + Model.Sum(s => s.IntValue).ToString());
+    col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
+    col.AddSpacer("some spacing").CssClass("text-center");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
     col.Bind(m => m.NullableDecimalValue);
 }).FooterText("Total:")

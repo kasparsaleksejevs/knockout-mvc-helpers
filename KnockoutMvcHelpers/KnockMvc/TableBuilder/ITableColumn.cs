@@ -24,6 +24,8 @@ namespace KnockMvc.TableHelper
 
         bool IsHeader { get; set; }
 
+        bool IsSpacer { get; set; }
+
         string Template { get; set; }
 
         string TemplateSpecifier { get; set; }

@@ -14,6 +14,13 @@ namespace KnockMvc.TableHelper
 
         private string tableCss;
 
+        /// <summary>
+        /// Transposes columns to rows, so that rows are displayed as columns and table has so called 'horizontal-flow'.
+        /// Keep in mind that horizontal space may be limited and horizontal scrolling is not associated with good UX. 
+        /// This could be suitable when there are multiple columns and only a few data rows, prefferably with a common data-type.
+        /// </summary>
+        private bool useColumnsAsRows;
+
         private string footerText;
 
         internal ICollection<TModel> Model { get; set; }
@@ -47,20 +54,31 @@ namespace KnockMvc.TableHelper
         }
 
         /// <summary>
-        /// Renders this instance.
+        /// Renders the table and outputs as html string.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Html string containing rendered table.</returns>
         private string Render()
         {
+            if (this.useColumnsAsRows)
+                return this.RenderForColumnsAsRows();
+
             var colCount = this.columns.Count;
 
             var headRow = string.Empty;
             foreach (var column in this.columns)
             {
-                var cssClass = column.HeaderCssClass != null ? $" class=\"{column.HeaderCssClass}\"" : string.Empty;
-                headRow += $"<th{cssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? "&nbsp;" : column.ColumnTitle)}</th>";
+                if (column.IsSpacer)
+                {
+                    var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+                    headRow += $"<td{cssClass}>&nbsp;</th>";
+                    continue;
+                }
+
+                var headerCssClass = column.HeaderCssClass != null ? $" class=\"{column.HeaderCssClass}\"" : string.Empty;
+                headRow += $"<th{headerCssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? "&nbsp;" : column.ColumnTitle)}</th>";
             }
 
+            int rowNum = 0;
             var bodyRows = string.Empty;
             foreach (var row in this.Model)
             {
@@ -68,6 +86,20 @@ namespace KnockMvc.TableHelper
                 foreach (var column in this.columns)
                 {
                     var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+
+                    if (column.IsSpacer)
+                    {
+                        if (rowNum == 0)
+                        {
+                            var spanCount = this.Model.Count;
+                            if (this.columns.Any(m => m.FooterExpression != null))
+                                spanCount++;
+
+                            bodyRow += $"<td{cssClass} rowspan=\"{spanCount}\">{column.Evaluate(Model.FirstOrDefault())}</th>";
+                        }
+
+                        continue;
+                    }
 
                     var cellValue = column.Evaluate(row);
                     if (!string.IsNullOrEmpty(column.Template))
@@ -80,6 +112,7 @@ namespace KnockMvc.TableHelper
                 }
 
                 bodyRows += $"<tr>{bodyRow}</tr>";
+                rowNum++;
             }
 
             var footer = string.Empty;
@@ -167,6 +200,80 @@ namespace KnockMvc.TableHelper
             return table;
         }
 
+        /// <summary>
+        /// Renders the table (on columns-as-rows mode) and outputs as html string.
+        /// </summary>
+        /// <returns>Html string containing rendered table.</returns>
+        private string RenderForColumnsAsRows()
+        {
+            var bodyRows = string.Empty;
+            var footerTextAdded = false;
+            var footerTextValue = this.footerText;
+
+            for (int i = 0; i < this.columns.Count; i++)
+            {
+                var column = this.columns[i];
+                if (column.IsSpacer)
+                {
+                    var spanCount = 1 + this.Model.Count;
+                    if (this.columns.Any(m => m.FooterExpression != null))
+                        spanCount++;
+
+                    var spacerCssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+                    bodyRows += $"<tr><td{spacerCssClass} colspan=\"{spanCount}\">{column.Evaluate(Model.FirstOrDefault())}</td></tr>";
+                    continue;
+                }
+
+                var headerCssClass = column.HeaderCssClass != null ? $" class=\"{column.HeaderCssClass}\"" : string.Empty;
+                var bodyRow = $"<th{headerCssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? " &nbsp; " : column.ColumnTitle)}</th>";
+
+                foreach (var row in this.Model)
+                {
+                    var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+
+                    var cellValue = column.Evaluate(row);
+                    if (!string.IsNullOrEmpty(column.Template))
+                        cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
+
+                    if (column.IsHeader)
+                        bodyRow += $"<th{cssClass}>{cellValue}</th>";
+                    else
+                        bodyRow += $"<td{cssClass}>{cellValue}</td>";
+                }
+
+                var hasFooter = this.columns.Any(m => m.FooterExpression != null);
+                if (hasFooter)
+                {
+                    var footerCssClass = column.FooterCssClass != null ? $" class=\"{column.FooterCssClass}\"" : string.Empty;
+                    if (string.IsNullOrEmpty(footerCssClass))
+                        footerCssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+
+                    if (column.FooterExpression != null)
+                    {
+                        var cellValue = column.EvaluateFooter(this.Model);
+                        if (!string.IsNullOrEmpty(column.Template))
+                            cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
+
+                        bodyRow += $"<td{footerCssClass}>{cellValue}</td>";
+                    }
+                    else
+                    {
+                        bodyRow += $"<td{footerCssClass}>{footerTextValue}</td>";
+
+                        if (!footerTextAdded)
+                        {
+                            footerTextAdded = true;
+                            footerTextValue = "&nbsp;";
+                        }
+                    }
+                }
+
+                bodyRows += $"<tr>{bodyRow}</tr>";
+            }
+
+            return $"<table class=\"{this.tableCss}\"><tbody>{bodyRows}</tbody></table>";
+        }
+
         public ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builderAction)
         {
             var builder = new ColumnBuilder<TModel>(this);
@@ -183,6 +290,12 @@ namespace KnockMvc.TableHelper
         public ITableBuilderOptions<TModel> Css(string cssClass)
         {
             this.tableCss = cssClass;
+            return this;
+        }
+
+        public ITableBuilderOptions<TModel> UseColumnsAsRows()
+        {
+            this.useColumnsAsRows = true;
             return this;
         }
 

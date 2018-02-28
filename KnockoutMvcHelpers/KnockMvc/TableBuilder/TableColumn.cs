@@ -46,6 +46,8 @@ namespace KnockMvc.TableHelper
 
         public bool IsHeader { get; set; }
 
+        public bool IsSpacer { get; set; }
+
         public string BooleanTrueValue { get; set; } = true.ToString();
 
         public string BooleanFalseValue { get; set; } = false.ToString();
@@ -64,19 +66,30 @@ namespace KnockMvc.TableHelper
 
             if (expression.Body is MemberExpression memberExpression)
             {
-                var property = memberExpression.Member as PropertyInfo;
-
-                if (string.IsNullOrEmpty(this.ColumnTitle))
+                if (memberExpression.Member is PropertyInfo property)
                 {
-                    var displayAttr = property.GetCustomAttribute(typeof(DisplayAttribute)) as DisplayAttribute;
-                    this.ColumnTitle = displayAttr != null ? displayAttr.Name : property.Name;
+                    if (string.IsNullOrEmpty(this.ColumnTitle))
+                    {
+                        var displayAttr = property.GetCustomAttribute(typeof(DisplayAttribute)) as DisplayAttribute;
+                        this.ColumnTitle = displayAttr != null ? displayAttr.Name : property.Name;
+                    }
+
+                    var formatAttr = property.GetCustomAttribute(typeof(DisplayFormatAttribute)) as DisplayFormatAttribute;
+                    this.Format = formatAttr?.DataFormatString;
+
+                    this.ColumnName = property.Name;
+                    this.ColumnType = property.PropertyType;
                 }
-
-                var formatAttr = property.GetCustomAttribute(typeof(DisplayFormatAttribute)) as DisplayFormatAttribute;
-                this.Format = formatAttr?.DataFormatString;
-
-                this.ColumnName = property.Name;
-                this.ColumnType = property.PropertyType;
+                else
+                {
+                    if (memberExpression.Member is FieldInfo field)
+                    {
+                        this.ColumnName = string.Empty;
+                        this.ColumnType = field.FieldType;
+                    }
+                    else
+                        this.ColumnType = typeof(string);
+                }
             }
             else
             {
@@ -138,14 +151,12 @@ namespace KnockMvc.TableHelper
                 result = (property as bool?) == true ? this.BooleanTrueValue : this.BooleanFalseValue;
             else if (columnType.IsEnum)
             {
-                var displayAttr = columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) as DisplayAttribute;
-                if (displayAttr != null)
+                if (columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr)
                     result = displayAttr.Name;
                 else
                 {
                     // for legacy MVC3+ projects the DescriptionAttribute is usually used
-                    var descriptionAttr = columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) as DescriptionAttribute;
-                    if (descriptionAttr != null)
+                    if (columnType.GetField(property.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
                         result = descriptionAttr.Description;
                     else
                         result = property.ToString();
