@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Web.Mvc;
@@ -22,6 +23,8 @@ namespace KnockMvc.TableHelper
         private bool useColumnsAsRows;
 
         private string footerText;
+
+        private string customHeaderRow;
 
         internal ICollection<TModel> Model { get; set; }
 
@@ -63,20 +66,33 @@ namespace KnockMvc.TableHelper
                 return this.RenderForColumnsAsRows();
 
             var colCount = this.columns.Count;
+            var hasFooter = this.columns.Any(m => m.FooterExpression != null);
 
-            var headRow = string.Empty;
+            var theadRows = string.Empty;
+            if (!string.IsNullOrWhiteSpace(this.customHeaderRow))
+            {
+                var rowCount = 1 + this.Model.Count + (hasFooter ? 1 : 0);
+
+                this.customHeaderRow = this.customHeaderRow.Replace("{columnCount}", this.columns.Count.ToString(CultureInfo.InvariantCulture));
+                this.customHeaderRow = this.customHeaderRow.Replace("{rowCount}", rowCount.ToString(CultureInfo.InvariantCulture));
+                theadRows += this.customHeaderRow;
+            }
+
+            var mainTheadRow = string.Empty;
             foreach (var column in this.columns)
             {
                 if (column.IsSpacer)
                 {
                     var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
-                    headRow += $"<td{cssClass}>&nbsp;</th>";
+                    mainTheadRow += $"<td{cssClass}>&nbsp;</th>";
                     continue;
                 }
 
                 var headerCssClass = column.HeaderCssClass != null ? $" class=\"{column.HeaderCssClass}\"" : string.Empty;
-                headRow += $"<th{headerCssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? "&nbsp;" : column.ColumnTitle)}</th>";
+                mainTheadRow += $"<th{headerCssClass}>{(string.IsNullOrEmpty(column.ColumnTitle) ? "&nbsp;" : column.ColumnTitle)}</th>";
             }
+
+            theadRows += $"<tr>{mainTheadRow}</tr>";
 
             int rowNum = 0;
             var bodyRows = string.Empty;
@@ -116,7 +132,6 @@ namespace KnockMvc.TableHelper
             }
 
             var footer = string.Empty;
-            var hasFooter = this.columns.Any(m => m.FooterExpression != null);
             if (hasFooter)
             {
                 var spanSize = 0;
@@ -195,7 +210,7 @@ namespace KnockMvc.TableHelper
                 footer = $"<tfoot><tr>{footer}</tr></tfoot>";
             }
 
-            var table = $"<table class=\"{this.tableCss}\"><thead><tr>{headRow}</tr></thead>{footer}<tbody>{bodyRows}</tbody></table>";
+            var table = $"<table class=\"{this.tableCss}\"><thead>{theadRows}</thead>{footer}<tbody>{bodyRows}</tbody></table>";
 
             return table;
         }
@@ -209,6 +224,17 @@ namespace KnockMvc.TableHelper
             var bodyRows = string.Empty;
             var footerTextAdded = false;
             var footerTextValue = this.footerText;
+            var hasFooter = this.columns.Any(m => m.FooterExpression != null);
+
+            string theadRows = null;
+            if (!string.IsNullOrWhiteSpace(this.customHeaderRow))
+            {
+                var rowCount = 1 + this.Model.Count + (hasFooter ? 1 : 0);
+
+                this.customHeaderRow = this.customHeaderRow.Replace("{columnCount}", this.columns.Count.ToString(CultureInfo.InvariantCulture));
+                this.customHeaderRow = this.customHeaderRow.Replace("{rowCount}", rowCount.ToString(CultureInfo.InvariantCulture));
+                theadRows = $"<thead>{this.customHeaderRow}</thead>";
+            }
 
             for (int i = 0; i < this.columns.Count; i++)
             {
@@ -241,7 +267,6 @@ namespace KnockMvc.TableHelper
                         bodyRow += $"<td{cssClass}>{cellValue}</td>";
                 }
 
-                var hasFooter = this.columns.Any(m => m.FooterExpression != null);
                 if (hasFooter)
                 {
                     var footerCssClass = column.FooterCssClass != null ? $" class=\"{column.FooterCssClass}\"" : string.Empty;
@@ -271,7 +296,7 @@ namespace KnockMvc.TableHelper
                 bodyRows += $"<tr>{bodyRow}</tr>";
             }
 
-            return $"<table class=\"{this.tableCss}\"><tbody>{bodyRows}</tbody></table>";
+            return $"<table class=\"{this.tableCss}\">{theadRows}<tbody>{bodyRows}</tbody></table>";
         }
 
         public ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builderAction)
@@ -296,6 +321,18 @@ namespace KnockMvc.TableHelper
         public ITableBuilderOptions<TModel> UseColumnsAsRows()
         {
             this.useColumnsAsRows = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the custom header HTML row string before any other auto-generated header row.
+        /// If <c>thead</c> block doesn't exist (e.g. for horizontal-flow table) - it is created. 
+        /// </summary>
+        /// <returns>Table builder instance.</returns>
+        /// <example>.AddCustomHeaderRow("<tr><th colspan="3">Spanned title</th><th>Other title</th></tr>")</example>
+        public ITableBuilderOptions<TModel> AddCustomHeaderRow(string customHeaderRowHtml)
+        {
+            this.customHeaderRow = customHeaderRowHtml;
             return this;
         }
 
