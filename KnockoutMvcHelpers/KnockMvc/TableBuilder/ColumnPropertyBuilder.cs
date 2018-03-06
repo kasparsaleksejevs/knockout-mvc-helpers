@@ -4,17 +4,36 @@ using System.Linq.Expressions;
 
 namespace KnockMvc.TableHelper
 {
+    /// <summary>
+    /// Column builder class to support modifying/formatting defined column.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TProperty">The type of the property.</typeparam>
     public class ColumnPropertyBuilder<TModel, TProperty> where TModel : class
     {
+        /// <summary>
+        /// The column builder.
+        /// </summary>
         private ColumnBuilder<TModel> columnBuilder;
 
-        internal ITableColumn<TModel> Column { get; set; }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ColumnPropertyBuilder{TModel, TProperty}"/> class.
+        /// </summary>
+        /// <param name="columnBuilder">The column builder.</param>
+        /// <param name="column">The column.</param>
         public ColumnPropertyBuilder(ColumnBuilder<TModel> columnBuilder, ITableColumn<TModel> column)
         {
             this.columnBuilder = columnBuilder;
             this.Column = column;
         }
+
+        /// <summary>
+        /// Gets or sets the column.
+        /// </summary>
+        /// <value>
+        /// The column.
+        /// </value>
+        internal ITableColumn<TModel> Column { get; set; }
 
         public ColumnPropertyBuilder<TModel, TProperty> Footer(Expression<Func<ICollection<TModel>, object>> expression)
         {
@@ -106,7 +125,14 @@ namespace KnockMvc.TableHelper
             return this;
         }
 
-        public ColumnPropertyBuilder<TModel, TProperty> WithAttribute(string attributeName, Expression<Func<TModel, object>> valueExpression)
+        /// <summary>
+        /// Adds the HTML attribute with specified value expression to the column.
+        /// This method also accepts and adds the 'class' atribute even if the class property is already specified.
+        /// </summary>
+        /// <param name="attributeName">Name of the attribute.</param>
+        /// <param name="valueExpression">The value expression.</param>
+        /// <returns>Column builder instance.</returns>
+        public ColumnPropertyBuilder<TModel, TProperty> AddAttribute(string attributeName, Expression<Func<TModel, object>> valueExpression)
         {
             this.Column.Attributes.Add(new AttributeData<TModel>
             {

@@ -102,7 +102,21 @@ namespace KnockMvc.TableHelper
                 var bodyRow = string.Empty;
                 foreach (var column in this.columns)
                 {
-                    var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
+                    var cssClass = column.CssClass;
+                    var attributes = string.Empty;
+                    if (column.Attributes.Count > 0)
+                        foreach (var attribute in column.Attributes)
+                        {
+                            if (attribute.Name.ToLower() == "class")
+                            {
+                                cssClass += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString());
+                                continue;
+                            }
+
+                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+                        }
+
+                    cssClass = cssClass != null ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
 
                     if (column.IsSpacer)
                     {
@@ -121,11 +135,6 @@ namespace KnockMvc.TableHelper
                     var cellValue = column.Evaluate(row);
                     if (!string.IsNullOrEmpty(column.Template))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
-
-                    var attributes = string.Empty;
-                    if (column.Attributes.Count > 0)
-                        foreach (var attribute in column.Attributes)
-                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
 
                     if (column.IsHeader)
                         bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
@@ -261,8 +270,7 @@ namespace KnockMvc.TableHelper
 
                 foreach (var row in this.Model)
                 {
-                    var cssClass = column.CssClass != null ? $" class=\"{column.CssClass}\"" : string.Empty;
-
+                    var cssClass = column.CssClass;
                     var cellValue = column.Evaluate(row);
                     if (!string.IsNullOrEmpty(column.Template))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
@@ -270,8 +278,17 @@ namespace KnockMvc.TableHelper
                     var attributes = string.Empty;
                     if (column.Attributes.Count > 0)
                         foreach (var attribute in column.Attributes)
-                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+                        {
+                            if (attribute.Name.ToLower() == "class")
+                            {
+                                cssClass += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString());
+                                continue;
+                            }
 
+                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+                        }
+
+                    cssClass = cssClass != null ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
                     if (column.IsHeader)
                         bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
                     else

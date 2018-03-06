@@ -7,8 +7,17 @@ using System.Reflection;
 
 namespace KnockMvc.TableHelper
 {
+    /// <summary>
+    /// Class to contain column related data, like the name, type, format, etc.
+    /// </summary>
+    /// <typeparam name="TModel">The type of the model.</typeparam>
+    /// <typeparam name="TProperty">The type of the property.</typeparam>
+    /// <seealso cref="KnockMvc.TableHelper.ITableColumn{TModel}" />
     public class TableColumn<TModel, TProperty> : ITableColumn<TModel> where TModel : class
     {
+        /// <summary>
+        /// The model rows.
+        /// </summary>
         private ICollection<TModel> model;
 
         /// <summary>
@@ -27,6 +36,12 @@ namespace KnockMvc.TableHelper
         /// </value>
         public string ColumnName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the type of the column.
+        /// </summary>
+        /// <value>
+        /// The type of the column.
+        /// </value>
         public Type ColumnType { get; set; }
 
         /// <summary>
@@ -34,28 +49,107 @@ namespace KnockMvc.TableHelper
         /// </summary>
         public Func<TModel, TProperty> ValueExpression { get; set; }
 
+        /// <summary>
+        /// Gets or sets the footer expression.
+        /// </summary>
+        /// <value>
+        /// The footer expression.
+        /// </value>
         public Func<ICollection<TModel>, object> FooterExpression { get; set; }
 
+        /// <summary>
+        /// Gets or sets the format to apply to the cell value (e.g., ToString("format")).
+        /// </summary>
+        /// <value>
+        /// The format.
+        /// </value>
         public string Format { get; set; }
 
+        /// <summary>
+        /// Gets or sets the header CSS class.
+        /// </summary>
+        /// <value>
+        /// The header CSS class.
+        /// </value>
         public string HeaderCssClass { get; set; }
 
+        /// <summary>
+        /// Gets or sets the CSS class for the table cell.
+        /// </summary>
+        /// <value>
+        /// The CSS class.
+        /// </value>
         public string CssClass { get; set; }
 
+        /// <summary>
+        /// Gets or sets the footer CSS class.
+        /// If footer CSS class is not specified, the CssClass property value is applied.
+        /// </summary>
+        /// <value>
+        /// The footer CSS class.
+        /// </value>
         public string FooterCssClass { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this column is a 'header' - the <c>th</c> tag will be applied to the table cell instead of regular <c>td</c> tag.
+        /// </summary>
+        /// <value>
+        ///   <c>True</c> if this column is to be displayed as header; otherwise, <c>false</c>.
+        /// </value>
         public bool IsHeader { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this column is a 'spacer' column.
+        /// This can be useful mainly in horizontal flow columns, where this can create table 'split'.
+        /// </summary>
+        /// <value>
+        ///   <c>True</c> if this column is a spacer; otherwise, <c>false</c>.
+        /// </value>
         public bool IsSpacer { get; set; }
 
+        /// <summary>
+        /// Gets or sets the boolean true value representation as string (e.g., "Yes", "Ok", etc).
+        /// Used only for boolean type columns.
+        /// </summary>
+        /// <value>
+        /// The boolean true value.
+        /// </value>
         public string BooleanTrueValue { get; set; } = true.ToString();
 
+        /// <summary>
+        /// Gets or sets the boolean false value representation as string (e.g., "No", "Declined", etc).
+        /// Used only for boolean type columns.
+        /// </summary>
+        /// <value>
+        /// The boolean false value.
+        /// </value>
         public string BooleanFalseValue { get; set; } = false.ToString();
 
+        /// <summary>
+        /// Gets or sets the template to apply to the formatted cell value.
+        /// By default the string '{value}' defines where the formatted cell value will be put in the resulting string.
+        /// </summary>
+        /// <value>
+        /// The template.
+        /// </value>
+        /// <example>col.Bind(m => m.DecimalValue).Format("N2").Template("{value}x"); - will display value like '123.34x'.</example>
         public string Template { get; set; }
 
+        /// <summary>
+        /// Gets or sets the template specifier, which will be later replaced with the actual cell value.
+        /// This should be changed only for edge cases where the resulting text must contain actual string '{value}'.
+        /// </summary>
+        /// <value>
+        /// The template specifier (default is '{value}').
+        /// </value>
         public string TemplateSpecifier { get; set; } = "{value}";
 
+        /// <summary>
+        /// Gets or sets the HTML attributes to apply to the column.
+        /// </summary>
+        /// <value>
+        /// The HTML attributes.
+        /// </value>
         public IList<AttributeData<TModel>> Attributes { get; set; } = new List<AttributeData<TModel>>();
 
         /// <summary>
@@ -136,6 +230,11 @@ namespace KnockMvc.TableHelper
             return this.EvaluateInternal(property, format);
         }
 
+        public Func<TModel, TExpression> GetValueExpression<TExpression>()
+        {
+            return this.ValueExpression as Func<TModel, TExpression>;
+        }
+
         private string EvaluateInternal(object property, string format)
         {
             var columnType = property.GetType();
@@ -168,12 +267,6 @@ namespace KnockMvc.TableHelper
                 result = property.ToString();
 
             return result;
-        }
-
-        public Func<TModel, TExpression> GetValueExpression<TExpression>()
-        {
-            var x = this.ValueExpression as Func<TModel, TExpression>;
-            return x;
         }
     }
 }
