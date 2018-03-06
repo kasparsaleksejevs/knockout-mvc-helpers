@@ -40,6 +40,8 @@ namespace KnockMvc.TableHelper
 
         Func<ICollection<TModel>, object> FooterExpression { get; set; }
 
+        IList<AttributeData<TModel>> Attributes { get; set; }
+
         Func<TModel, TExpression> GetValueExpression<TExpression>();
     }
 }

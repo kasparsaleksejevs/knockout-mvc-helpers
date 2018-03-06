@@ -105,5 +105,16 @@ namespace KnockMvc.TableHelper
             this.Column.TemplateSpecifier = templateSpecifier;
             return this;
         }
+
+        public ColumnPropertyBuilder<TModel, TProperty> WithAttribute(string attributeName, Expression<Func<TModel, object>> valueExpression)
+        {
+            this.Column.Attributes.Add(new AttributeData<TModel>
+            {
+                Name = attributeName,
+                Value = valueExpression.Compile()
+            });
+
+            return this;
+        }
     }
 }

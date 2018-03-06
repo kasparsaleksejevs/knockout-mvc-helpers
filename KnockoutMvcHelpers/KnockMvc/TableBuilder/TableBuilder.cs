@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Web;
 using System.Web.Mvc;
 
 namespace KnockMvc.TableHelper
@@ -121,10 +122,15 @@ namespace KnockMvc.TableHelper
                     if (!string.IsNullOrEmpty(column.Template))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
+                    var attributes = string.Empty;
+                    if (column.Attributes.Count > 0)
+                        foreach (var attribute in column.Attributes)
+                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+
                     if (column.IsHeader)
-                        bodyRow += $"<th{cssClass}>{cellValue}</th>";
+                        bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
                     else
-                        bodyRow += $"<td{cssClass}>{cellValue}</td>";
+                        bodyRow += $"<td{cssClass}{attributes}>{cellValue}</td>";
                 }
 
                 bodyRows += $"<tr>{bodyRow}</tr>";
@@ -261,10 +267,15 @@ namespace KnockMvc.TableHelper
                     if (!string.IsNullOrEmpty(column.Template))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
+                    var attributes = string.Empty;
+                    if (column.Attributes.Count > 0)
+                        foreach (var attribute in column.Attributes)
+                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+
                     if (column.IsHeader)
-                        bodyRow += $"<th{cssClass}>{cellValue}</th>";
+                        bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
                     else
-                        bodyRow += $"<td{cssClass}>{cellValue}</td>";
+                        bodyRow += $"<td{cssClass}{attributes}>{cellValue}</td>";
                 }
 
                 if (hasFooter)

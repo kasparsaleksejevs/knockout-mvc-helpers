@@ -56,6 +56,8 @@ namespace KnockMvc.TableHelper
 
         public string TemplateSpecifier { get; set; } = "{value}";
 
+        public IList<AttributeData<TModel>> Attributes { get; set; } = new List<AttributeData<TModel>>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TableColumn{TModel, TProperty}"/> class.
         /// </summary>
