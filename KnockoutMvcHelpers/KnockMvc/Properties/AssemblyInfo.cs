@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("KnockMVC")]
-[assembly: AssemblyDescription("Library to ease writing UI tables functionality")]
+[assembly: AssemblyDescription("Library to make writing UI tables easier using MVC5 HTML helpers")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Kaspars Aleksejevs")]
 [assembly: AssemblyProduct("KnockMvc")]
