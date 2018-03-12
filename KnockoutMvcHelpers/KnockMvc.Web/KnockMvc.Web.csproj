@@ -230,7 +230,6 @@
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Home\MvcHelperGrid.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Scripts\knockout.validation.min.js.map" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
