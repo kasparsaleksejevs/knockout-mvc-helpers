@@ -45,5 +45,10 @@ namespace KnockMvc.Web.Controllers
 
             return View(result);
         }
+
+        public ActionResult TsGenerator()
+        {
+            return View();
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace KnockMvc.Common
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
     public class TypeScriptGenerateAttribute : Attribute
     {
+        [Obsolete("Replaced by TsGenerator")]
         public static string GenerateJsFiles(Assembly sourceAssembly, IServiceProvider host)
         {
             var types = new List<Type>();
@@ -59,6 +60,7 @@ namespace KnockMvc.Common
             return string.Join("\r\n", files.Select(s => s.Item2));
         }
 
+        [Obsolete("Replaced by TsGenerator")]
         private static string GetPropertyTypeDefinition(PropertyInfo property)
         {
             var nullableSymbol = string.Empty; //property.IsNullable ? "?" : string.Empty;
