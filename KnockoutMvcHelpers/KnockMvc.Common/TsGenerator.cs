@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -37,25 +38,7 @@ namespace KnockMvc.Common
         {
             foreach (var item in this.types)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine($"    class {item.Name} {{");
-
-                foreach (var member in item.GetMembers(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    var prop = member as PropertyInfo;
-                    if (prop == null)
-                        continue;
-
-                    // ~"ko.observable<string>();"
-                    var jsPropertyType = string.Empty;
-                    jsPropertyType = this.GetPropertyDefinition(prop);
-
-                    sb.AppendLine($"        {prop.Name} = {jsPropertyType}");
-                }
-
-                sb.AppendLine("    }");
-
-                this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsClass });
+                this.GenerateTsClass(item);
             }
 
             // ============== // ============== // ============== // ============== 
@@ -73,6 +56,88 @@ namespace KnockMvc.Common
 
             return tempResult;
             // ============== // ============== // ============== // ============== 
+        }
+
+        private void GenerateTsClass(Type item)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"    class {item.Name} {{");
+
+            foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                // ~"ko.observable<string>();"
+                var jsPropertyType = string.Empty;
+                jsPropertyType = this.GetPropertyDefinition(prop);
+
+                sb.AppendLine($"        {prop.Name} = {jsPropertyType}");
+            }
+
+            sb.AppendLine("    }");
+
+            this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsClass });
+        }
+
+        /// <summary>
+        /// Gets the property definition in the form 'ko.observable&lt;number&gt;>();'.
+        /// </summary>
+        /// <param name="property">The property info.</param>
+        /// <returns>Property definition</returns>
+        private string GetPropertyDefinition(PropertyInfo property)
+        {
+            // ToDo: default values?
+            // ToDo: cycle checking for custom classes
+
+            var propertyType = property.PropertyType;
+
+            // is it an Array?
+            var isArray = false;
+            if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
+            {
+                if (propertyType.IsGenericType)
+                    propertyType = propertyType.GetGenericArguments()[0];
+                else
+                    propertyType = propertyType.GetElementType();
+
+                isArray = true;
+            }
+
+            var tsPropertyType = "string";
+            var nullableSymbol = string.Empty;
+
+            // is it a subclass?
+            if (propertyType.GetCustomAttribute<TypeScriptGenerateAttribute>(false) != null)
+            {
+                this.GenerateTsClass(propertyType);
+                tsPropertyType = propertyType.Name;
+            }
+            else
+            {
+                // is it an Enum?
+                if (propertyType.IsEnum)
+                    return this.GenerateEnum(propertyType);
+
+                if (Nullable.GetUnderlyingType(propertyType) != null)
+                    nullableSymbol = "?";
+
+                if (propertyType == typeof(int) || propertyType == typeof(int?)
+                        || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
+                        || propertyType == typeof(double) || propertyType == typeof(double?)
+                        || propertyType == typeof(float) || propertyType == typeof(float?)
+                        )
+                    tsPropertyType = "number";
+
+                if (propertyType == typeof(string))
+                    tsPropertyType = "string";
+
+                if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+                    tsPropertyType = "boolean";
+
+                if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
+                    tsPropertyType = "Date";
+            }
+
+            var koType = isArray ? "observableArray" : "observable";
+            return $"ko.{koType}<{tsPropertyType}{nullableSymbol}>();";
         }
 
         /// <summary>
@@ -126,44 +191,6 @@ namespace KnockMvc.Common
                 nullableSymbol = "?";
 
             return $"ko.observable<{propertyType.Name}{nullableSymbol}>();";
-        }
-
-        /// <summary>
-        /// Gets the property definition in the form 'ko.observable&lt;number&gt;>();'.
-        /// </summary>
-        /// <param name="property">The property info.</param>
-        /// <returns>Property definition</returns>
-        private string GetPropertyDefinition(PropertyInfo property)
-        {
-            if (property.PropertyType.IsEnum)
-                return this.GenerateEnum(property.PropertyType);
-
-            // ToDo: arrays
-            // ToDo: custom classes
-            // ToDo: default values?
-
-            var propertyType = "string";
-            var nullableSymbol = string.Empty;
-            if (Nullable.GetUnderlyingType(property.PropertyType) != null)
-                nullableSymbol = "?";
-
-            if (property.PropertyType == typeof(int) || property.PropertyType == typeof(int?)
-                    || property.PropertyType == typeof(decimal) || property.PropertyType == typeof(decimal?)
-                    || property.PropertyType == typeof(double) || property.PropertyType == typeof(double?)
-                    || property.PropertyType == typeof(float) || property.PropertyType == typeof(float?)
-                    )
-                propertyType = "number";
-
-            if (property.PropertyType == typeof(string))
-                propertyType = "string";
-
-            if (property.PropertyType == typeof(bool) || property.PropertyType == typeof(bool?))
-                propertyType = "boolean";
-
-            if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
-                propertyType = "Date";
-
-            return $"ko.observable<{propertyType}{nullableSymbol}>();";
         }
 
         private class TsData
