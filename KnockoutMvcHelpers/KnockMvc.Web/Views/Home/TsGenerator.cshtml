@@ -5,5 +5,5 @@
 <h2>TypeScript Generator</h2>
 
 <pre style="background-color:#e4f0fb;padding:10px;">
-@(new KnockMvc.Common.TsGenerator(new List<Type>() { typeof(KnockMvc.DTO.MyStuff.RowGeneratorTestData) }).Generate())
+@(new KnockMvc.TypeScriptGeneration.TypeScriptGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate())
 </pre>

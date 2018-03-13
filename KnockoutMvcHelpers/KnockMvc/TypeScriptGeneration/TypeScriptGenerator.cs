@@ -7,14 +7,24 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace KnockMvc.Common
+namespace KnockMvc.TypeScriptGeneration
 {
-    public class TsGenerator
+    /// <summary>
+    /// TypeScript generator class.
+    /// Supports generation of TS classes and enums (with text descriptions).
+    /// </summary>
+    /// <typeparam name="TGenerateAttribute">The type of the TS generation attribute.</typeparam>
+    public class TypeScriptGenerator<TGenerateAttribute> where TGenerateAttribute : Attribute
     {
+        /// <summary>
+        /// The source assembly from which to take classes to generate TypeScript.
+        /// </summary>
+        private Assembly sourceAssembly = null;
+
         /// <summary>
         /// The types for which to generate TypeScript.
         /// </summary>
-        private IList<Type> types = null;
+        private IList<Type> types = new List<Type>();
 
         /// <summary>
         /// The generated data - namespace, contents and content type.
@@ -22,12 +32,12 @@ namespace KnockMvc.Common
         private IList<TsData> generatedData = new List<TsData>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TsGenerator"/> class.
+        /// Initializes a new instance of the <see cref="TypeScriptGenerator{TGenerateAttribute}"/> class.
         /// </summary>
-        /// <param name="types">The types for which to generate corresponding TypeScript classes.</param>
-        public TsGenerator(IList<Type> types)
+        /// <param name="sourceAssembly">The source assembly from which to take types to generate.</param>
+        public TypeScriptGenerator(Assembly sourceAssembly)
         {
-            this.types = types;
+            this.sourceAssembly = sourceAssembly;
         }
 
         /// <summary>
@@ -36,36 +46,49 @@ namespace KnockMvc.Common
         /// <returns>Currently for testing - full generator output.</returns>
         public string Generate()
         {
-            foreach (var item in this.types)
+            foreach (var type in sourceAssembly.GetExportedTypes())
             {
-                this.GenerateTsClass(item);
+                if (type.GetCustomAttribute<TGenerateAttribute>(false) == null)
+                    continue;
+
+                this.types.Add(type);
             }
+
+            foreach (var item in this.types)
+                this.GenerateTsClass(item);
 
             // ============== // ============== // ============== // ============== 
             var tempResult = string.Empty;
             foreach (var item in this.generatedData.GroupBy(g => g.Namespace))
             {
-                tempResult += "module " + item.Key + " {" + Environment.NewLine;
+                tempResult += "module " + item.Key + " {";
                 foreach (var dataItem in item.OrderBy(o => o.ContentType))
                 {
-                    tempResult += dataItem.Contents + Environment.NewLine;
+                    tempResult += dataItem.Contents;
                 }
 
-                tempResult += "}" + Environment.NewLine;
+                tempResult += "}" + Environment.NewLine + Environment.NewLine;
             }
 
             return tempResult;
             // ============== // ============== // ============== // ============== 
         }
 
+        /// <summary>
+        /// Generates the ts class.
+        /// </summary>
+        /// <param name="item">The item.</param>
         private void GenerateTsClass(Type item)
         {
+            if (this.generatedData.Any(m => m.Namespace == item.Namespace && m.Name == item.Name))
+                return;
+
             var sb = new StringBuilder();
+            sb.AppendLine();
             sb.AppendLine($"    class {item.Name} {{");
 
             foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                // ~"ko.observable<string>();"
                 var jsPropertyType = string.Empty;
                 jsPropertyType = this.GetPropertyDefinition(prop);
 
@@ -105,7 +128,7 @@ namespace KnockMvc.Common
             var nullableSymbol = string.Empty;
 
             // is it a subclass?
-            if (propertyType.GetCustomAttribute<TypeScriptGenerateAttribute>(false) != null)
+            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
             {
                 this.GenerateTsClass(propertyType);
                 tsPropertyType = propertyType.Name;
@@ -147,44 +170,47 @@ namespace KnockMvc.Common
         /// <returns>Generated property</returns>
         private string GenerateEnum(Type propertyType)
         {
-            var sb = new StringBuilder();
-
-            var underlyingType = Enum.GetUnderlyingType(propertyType);
-            var enumValues = Enum.GetValues(propertyType);
-
-            sb.AppendLine($"    enum {propertyType.Name} {{");
-            foreach (var enumItem in enumValues)
+            if (!this.generatedData.Any(m => m.Namespace == propertyType.Namespace && m.Name == propertyType.Name))
             {
-                var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
-                sb.AppendLine($"        {enumItem.ToString()} = {enumValue},");
-            }
+                var sb = new StringBuilder();
+                var underlyingType = Enum.GetUnderlyingType(propertyType);
+                var enumValues = Enum.GetValues(propertyType);
 
-            sb.AppendLine("    }");
-
-            sb.AppendLine();
-            sb.AppendLine($"    const {propertyType.Name}Text = new Map<number, string>([");
-            foreach (var enumItem in enumValues)
-            {
-                var enumDescription = string.Empty;
-                if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr)
-                    enumDescription = displayAttr.Name;
-                else
+                sb.AppendLine();
+                sb.AppendLine($"    enum {propertyType.Name} {{");
+                foreach (var enumItem in enumValues)
                 {
-                    // for legacy MVC3+ projects the DescriptionAttribute is usually used
-                    if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
-                        enumDescription = descriptionAttr.Description;
-                    else
-                        enumDescription = enumItem.ToString();
+                    var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
+                    sb.AppendLine($"        {enumItem.ToString()} = {enumValue},");
                 }
 
-                var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
-                sb.AppendLine($"        [{propertyType.Name}.{enumItem.ToString()}, '{enumDescription}'],");
+                sb.AppendLine("    }");
+
+                sb.AppendLine();
+                sb.AppendLine($"    const {propertyType.Name}Text = new Map<number, string>([");
+                foreach (var enumItem in enumValues)
+                {
+                    var enumDescription = string.Empty;
+                    if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr)
+                        enumDescription = displayAttr.Name;
+                    else
+                    {
+                        // for legacy MVC3+ projects the DescriptionAttribute is usually used
+                        if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
+                            enumDescription = descriptionAttr.Description;
+                        else
+                            enumDescription = enumItem.ToString();
+                    }
+
+                    var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
+                    sb.AppendLine($"        [{propertyType.Name}.{enumItem.ToString()}, '{enumDescription}'],");
+                }
+
+                sb.AppendLine("    ]);");
+                // enum description call example: 'var textVal = MyEnumText.get(MyEnum.Val2); // will get "Other (Descr)"'
+
+                this.generatedData.Add(new TsData { Namespace = propertyType.Namespace, Name = propertyType.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsEnum });
             }
-
-            sb.AppendLine("    ]);");
-            // exmaple: 'var textVal = MyEnumText.get(MyEnum.Val2); // will store "Other (Descr)"'
-
-            this.generatedData.Add(new TsData { Namespace = propertyType.Namespace, Name = propertyType.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsEnum });
 
             var nullableSymbol = string.Empty;
             if (Nullable.GetUnderlyingType(propertyType) != null)
@@ -193,6 +219,9 @@ namespace KnockMvc.Common
             return $"ko.observable<{propertyType.Name}{nullableSymbol}>();";
         }
 
+        /// <summary>
+        /// Class to hold generated TS data.
+        /// </summary>
         private class TsData
         {
             public string Namespace { get; set; }
@@ -204,9 +233,13 @@ namespace KnockMvc.Common
             public ContentTypeEnum ContentType { get; set; }
         }
 
+        /// <summary>
+        /// Enum to denote type of generated TS content.
+        /// </summary>
         private enum ContentTypeEnum
         {
             TsClass = 1,
+
             TsEnum = 2
         }
     }
