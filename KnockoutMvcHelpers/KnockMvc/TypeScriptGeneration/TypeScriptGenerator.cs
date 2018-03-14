@@ -84,18 +84,32 @@ namespace KnockMvc.TypeScriptGeneration
                 return;
 
             var sb = new StringBuilder();
+            var sbInterface = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine($"    class {item.Name} {{");
 
+            sbInterface.AppendLine();
+            sbInterface.AppendLine($"    interface I{item.Name} {{");
+
             foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                var jsPropertyType = string.Empty;
-                jsPropertyType = this.GetPropertyDefinition(prop);
-
-                sb.AppendLine($"        {prop.Name} = {jsPropertyType}");
+                sb.AppendLine($"        {prop.Name} = {this.GetPropertyDefinition(prop)}");
+                sbInterface.AppendLine($"        {prop.Name}{this.GetPropertyInterfaceDefinition(prop)}");
             }
 
+            // add constructor
+            sb.AppendLine();
+            sb.AppendLine($"        constructor(p?: I{item.Name}) {{");
+            sb.AppendLine("            if (p) {");
+            foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                sb.AppendLine($"                this.{prop.Name}(p.{prop.Name});");
+
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
             sb.AppendLine("    }");
+            sbInterface.AppendLine("    }");
+
+            sb.Append(sbInterface);
 
             this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsClass });
         }
@@ -143,10 +157,9 @@ namespace KnockMvc.TypeScriptGeneration
                     nullableSymbol = "?";
 
                 if (propertyType == typeof(int) || propertyType == typeof(int?)
-                        || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
-                        || propertyType == typeof(double) || propertyType == typeof(double?)
-                        || propertyType == typeof(float) || propertyType == typeof(float?)
-                        )
+                    || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
+                    || propertyType == typeof(double) || propertyType == typeof(double?)
+                    || propertyType == typeof(float) || propertyType == typeof(float?))
                     tsPropertyType = "number";
 
                 if (propertyType == typeof(string))
@@ -164,6 +177,60 @@ namespace KnockMvc.TypeScriptGeneration
         }
 
         /// <summary>
+        /// Gets the property definition in the form 'ko.observable&lt;number&gt;>();'.
+        /// </summary>
+        /// <param name="property">The property info.</param>
+        /// <returns>Property definition</returns>
+        private string GetPropertyInterfaceDefinition(PropertyInfo property)
+        {
+            var propertyType = property.PropertyType;
+
+            // is it an Array?
+            var isArray = false;
+            if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
+            {
+                if (propertyType.IsGenericType)
+                    propertyType = propertyType.GetGenericArguments()[0];
+                else
+                    propertyType = propertyType.GetElementType();
+
+                isArray = true;
+            }
+
+            var tsPropertyType = "string";
+            var nullableSymbol = string.Empty;
+
+            if (Nullable.GetUnderlyingType(propertyType) != null)
+                nullableSymbol = "?";
+
+            // is it a subclass?
+            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
+                tsPropertyType = "I" + propertyType.Name;
+            else if (propertyType.IsEnum)
+                tsPropertyType = "number";
+            else
+            {
+                if (propertyType == typeof(int) || propertyType == typeof(int?)
+                    || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
+                    || propertyType == typeof(double) || propertyType == typeof(double?)
+                    || propertyType == typeof(float) || propertyType == typeof(float?))
+                    tsPropertyType = "number";
+
+                if (propertyType == typeof(string))
+                    tsPropertyType = "string";
+
+                if (propertyType == typeof(bool) || propertyType == typeof(bool?))
+                    tsPropertyType = "boolean";
+
+                if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
+                    tsPropertyType = "Date";
+            }
+
+            var arraySpecifier = isArray ? "[]" : string.Empty;
+            return $"{nullableSymbol}: {tsPropertyType}{arraySpecifier};";
+        }
+
+        /// <summary>
         /// Generates the TypeScript for enum property.
         /// </summary>
         /// <param name="propertyType">Type of the property (enum type).</param>
@@ -173,37 +240,32 @@ namespace KnockMvc.TypeScriptGeneration
             if (!this.generatedData.Any(m => m.Namespace == propertyType.Namespace && m.Name == propertyType.Name))
             {
                 var sb = new StringBuilder();
-                var underlyingType = Enum.GetUnderlyingType(propertyType);
-                var enumValues = Enum.GetValues(propertyType);
+                var fields = propertyType.GetFields(BindingFlags.Public | BindingFlags.Static);
 
                 sb.AppendLine();
                 sb.AppendLine($"    enum {propertyType.Name} {{");
-                foreach (var enumItem in enumValues)
-                {
-                    var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
-                    sb.AppendLine($"        {enumItem.ToString()} = {enumValue},");
-                }
+                foreach (var item in fields)
+                    sb.AppendLine($"        {item.Name} = {item.GetRawConstantValue()},");
 
                 sb.AppendLine("    }");
 
                 sb.AppendLine();
                 sb.AppendLine($"    const {propertyType.Name}Text = new Map<number, string>([");
-                foreach (var enumItem in enumValues)
+                foreach (var enumField in fields)
                 {
                     var enumDescription = string.Empty;
-                    if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr)
+                    if (enumField.GetCustomAttribute(typeof(DisplayAttribute)) is DisplayAttribute displayAttr)
                         enumDescription = displayAttr.Name;
                     else
                     {
                         // for legacy MVC3+ projects the DescriptionAttribute is usually used
-                        if (propertyType.GetField(enumItem.ToString()).GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
+                        if (enumField.GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
                             enumDescription = descriptionAttr.Description;
                         else
-                            enumDescription = enumItem.ToString();
+                            enumDescription = enumField.Name;
                     }
 
-                    var enumValue = Convert.ToInt32(Convert.ChangeType(enumItem, underlyingType));
-                    sb.AppendLine($"        [{propertyType.Name}.{enumItem.ToString()}, '{enumDescription}'],");
+                    sb.AppendLine($"        [{propertyType.Name}.{enumField.Name}, '{enumDescription}'],");
                 }
 
                 sb.AppendLine("    ]);");
