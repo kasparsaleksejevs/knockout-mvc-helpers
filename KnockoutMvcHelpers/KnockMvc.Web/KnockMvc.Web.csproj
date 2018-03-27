@@ -231,10 +231,10 @@
     <Content Include="Views\Home\MvcHelperGrid.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\TsGenerator.cshtml" />
+    <Content Include="tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Scripts\viewmodels\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -271,6 +271,8 @@
     <TypeScriptCompile Include="Scripts\typings\knockout.validation\knockout.validation.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\knockout\knockout.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\knockout\tests\jasmine.extensions.d.ts" />
+    <TypeScriptCompile Include="Scripts\viewmodels\model_KnockMvc.DTO.MyStuff.ts" />
+    <TypeScriptCompile Include="Scripts\viewmodels\model_KnockMvc.DTO.ts" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

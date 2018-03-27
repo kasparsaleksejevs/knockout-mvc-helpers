@@ -102,7 +102,13 @@ namespace KnockMvc.TypeScriptGeneration
             sb.AppendLine($"        constructor(p?: I{item.Name}) {{");
             sb.AppendLine("            if (p) {");
             foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                sb.AppendLine($"                this.{prop.Name}(p.{prop.Name});");
+            {
+                if (prop.PropertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
+                    sb.AppendLine($"                this.{prop.Name}(new {prop.Name}(p.{prop.Name}));");
+                else
+                    sb.AppendLine($"                this.{prop.Name}(p.{prop.Name});");
+            }
+
 
             sb.AppendLine("            }");
             sb.AppendLine("        }");
@@ -139,7 +145,6 @@ namespace KnockMvc.TypeScriptGeneration
             }
 
             var tsPropertyType = "string";
-            var nullableSymbol = string.Empty;
 
             // is it a subclass?
             if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
@@ -152,9 +157,6 @@ namespace KnockMvc.TypeScriptGeneration
                 // is it an Enum?
                 if (propertyType.IsEnum)
                     return this.GenerateEnum(propertyType);
-
-                if (Nullable.GetUnderlyingType(propertyType) != null)
-                    nullableSymbol = "?";
 
                 if (propertyType == typeof(int) || propertyType == typeof(int?)
                     || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
@@ -173,7 +175,7 @@ namespace KnockMvc.TypeScriptGeneration
             }
 
             var koType = isArray ? "observableArray" : "observable";
-            return $"ko.{koType}<{tsPropertyType}{nullableSymbol}>();";
+            return $"ko.{koType}<{tsPropertyType}>();";
         }
 
         /// <summary>
