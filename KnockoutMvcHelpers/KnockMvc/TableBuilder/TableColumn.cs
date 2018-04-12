@@ -235,7 +235,7 @@ namespace KnockMvc.TableHelper
             return this.ValueExpression as Func<TModel, TExpression>;
         }
 
-        private string EvaluateInternal(object property, string format)
+        internal string EvaluateInternal(object property, string format)
         {
             var columnType = property.GetType();
 

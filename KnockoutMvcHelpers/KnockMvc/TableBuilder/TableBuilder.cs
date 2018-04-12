@@ -27,13 +27,15 @@ namespace KnockMvc.TableHelper
 
         private string customHeaderRow;
 
-        internal ICollection<TModel> Model { get; set; }
-
         public TableBuilder(HtmlHelper html, ICollection<TModel> model)
         {
             this.htmlHelper = html;
             this.Model = model;
         }
+
+        internal ICollection<TModel> Model { get; set; }
+
+        internal ICollection<GroupedData<TModel>> Groups { get; set; }
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
@@ -55,6 +57,70 @@ namespace KnockMvc.TableHelper
         public string ToHtmlString()
         {
             return this.ToString();
+        }
+
+        public ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builderAction)
+        {
+            var builder = new ColumnBuilder<TModel>(this);
+            builderAction.Invoke(builder);
+            return this;
+        }
+
+        public ITableBuilderOptions<TModel> FooterText(string footerText)
+        {
+            this.footerText = footerText;
+            return this;
+        }
+
+        public ITableBuilderOptions<TModel> Css(string cssClass)
+        {
+            this.tableCss = cssClass;
+            return this;
+        }
+
+        /// <summary>
+        /// Switches the table to columns-as-rows mode.
+        /// </summary>
+        /// <returns>Table builder instance.</returns>
+        public ITableBuilderOptions<TModel> UseColumnsAsRows()
+        {
+            this.useColumnsAsRows = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the custom header HTML row string before any other auto-generated header row.
+        /// If <c>thead</c> block doesn't exist (e.g. for horizontal-flow table) - it is created. 
+        /// </summary>
+        /// <returns>Table builder instance.</returns>
+        /// <example>.AddCustomHeaderRow("<tr><th colspan="3">Spanned title</th><th>Other title</th></tr>")</example>
+        public ITableBuilderOptions<TModel> AddCustomHeaderRow(string customHeaderRowHtml)
+        {
+            this.customHeaderRow = customHeaderRowHtml;
+            return this;
+        }
+
+        /// <summary>
+        /// Groups the data by specified expression/property and displays groups as additional rows.
+        /// </summary>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <param name="expression">The expression to group by.</param>
+        /// <param name="cssClass">The optional CSS class to add to group header cell.</param>
+        /// <returns>
+        /// Table builder instance.
+        /// </returns>
+        public ITableBuilderOptions<TModel> GroupBy<TProperty>(Expression<Func<TModel, TProperty>> expression, string cssClass = null)
+        {
+            this.Groups = new List<GroupedData<TModel>>();
+            var groupingDummyColumn = new TableColumn<TModel, TProperty>(expression, this.Model);
+            var groupData = this.Model.GroupBy(expression.Compile());
+            foreach (var item in groupData)
+            {
+                var keyVal = groupingDummyColumn.EvaluateInternal(item.Key, null);
+                this.Groups.Add(new GroupedData<TModel> { GroupHeaderText = keyVal, DataRows = item.ToList(), GroupHeaderCss = cssClass });
+            }
+
+            return this;
         }
 
         /// <summary>
@@ -94,57 +160,17 @@ namespace KnockMvc.TableHelper
             }
 
             theadRows += $"<tr>{mainTheadRow}</tr>";
-
-            int rowNum = 0;
             var bodyRows = string.Empty;
-            foreach (var row in this.Model)
+            if (this.Groups != null && this.Groups.Count > 0)
             {
-                var bodyRow = string.Empty;
-                foreach (var column in this.columns)
+                foreach (var item in this.Groups)
                 {
-                    var cssClass = column.CssClass;
-                    var attributes = string.Empty;
-                    if (column.Attributes.Count > 0)
-                        foreach (var attribute in column.Attributes)
-                        {
-                            if (attribute.Name.ToLower() == "class")
-                            {
-                                cssClass += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString());
-                                continue;
-                            }
-
-                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
-                        }
-
-                    cssClass = cssClass != null ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
-
-                    if (column.IsSpacer)
-                    {
-                        if (rowNum == 0)
-                        {
-                            var spanCount = this.Model.Count;
-                            if (this.columns.Any(m => m.FooterExpression != null))
-                                spanCount++;
-
-                            bodyRow += $"<td{cssClass} rowspan=\"{spanCount}\">{column.Evaluate(Model.FirstOrDefault())}</th>";
-                        }
-
-                        continue;
-                    }
-
-                    var cellValue = column.Evaluate(row);
-                    if (!string.IsNullOrEmpty(column.Template))
-                        cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
-
-                    if (column.IsHeader)
-                        bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
-                    else
-                        bodyRow += $"<td{cssClass}{attributes}>{cellValue}</td>";
+                    bodyRows += GenerateBodyGroupHeader(item.GroupHeaderText, item.GroupHeaderCss);
+                    bodyRows += GenerateBodyRows(item.DataRows);
                 }
-
-                bodyRows += $"<tr>{bodyRow}</tr>";
-                rowNum++;
             }
+            else
+                bodyRows = GenerateBodyRows(this.Model);
 
             var footer = string.Empty;
             if (hasFooter)
@@ -228,6 +254,71 @@ namespace KnockMvc.TableHelper
             var table = $"<table class=\"{this.tableCss}\"><thead>{theadRows}</thead>{footer}<tbody>{bodyRows}</tbody></table>";
 
             return table;
+        }
+
+        private string GenerateBodyGroupHeader(string groupHeaderText, string cssClass)
+        {
+            var cssString = string.Empty;
+            if (!string.IsNullOrEmpty(cssClass))
+                cssString = $"class=\"{cssClass}\" ";
+
+            return $"<tr><td {cssString}colspan=\"{this.columns.Count}\">{groupHeaderText}</td></tr>";
+        }
+
+        private string GenerateBodyRows(ICollection<TModel> model)
+        {
+            int rowNum = 0;
+            var bodyRows = string.Empty;
+            foreach (var row in model)
+            {
+                var bodyRow = string.Empty;
+                foreach (var column in this.columns)
+                {
+                    var cssClass = column.CssClass;
+                    var attributes = string.Empty;
+                    if (column.Attributes.Count > 0)
+                        foreach (var attribute in column.Attributes)
+                        {
+                            if (attribute.Name.ToLower() == "class")
+                            {
+                                cssClass += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString());
+                                continue;
+                            }
+
+                            attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
+                        }
+
+                    cssClass = cssClass != null ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
+
+                    if (column.IsSpacer)
+                    {
+                        if (rowNum == 0)
+                        {
+                            var spanCount = model.Count;
+                            if (this.columns.Any(m => m.FooterExpression != null))
+                                spanCount++;
+
+                            bodyRow += $"<td{cssClass} rowspan=\"{spanCount}\">{column.Evaluate(model.FirstOrDefault())}</th>";
+                        }
+
+                        continue;
+                    }
+
+                    var cellValue = column.Evaluate(row);
+                    if (!string.IsNullOrEmpty(column.Template))
+                        cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
+
+                    if (column.IsHeader)
+                        bodyRow += $"<th{cssClass}{attributes}>{cellValue}</th>";
+                    else
+                        bodyRow += $"<td{cssClass}{attributes}>{cellValue}</td>";
+                }
+
+                bodyRows += $"<tr>{bodyRow}</tr>";
+                rowNum++;
+            }
+
+            return bodyRows;
         }
 
         /// <summary>
@@ -327,43 +418,6 @@ namespace KnockMvc.TableHelper
             return $"<table class=\"{this.tableCss}\">{theadRows}<tbody>{bodyRows}</tbody></table>";
         }
 
-        public ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builderAction)
-        {
-            var builder = new ColumnBuilder<TModel>(this);
-            builderAction.Invoke(builder);
-            return this;
-        }
-
-        public ITableBuilderOptions<TModel> FooterText(string footerText)
-        {
-            this.footerText = footerText;
-            return this;
-        }
-
-        public ITableBuilderOptions<TModel> Css(string cssClass)
-        {
-            this.tableCss = cssClass;
-            return this;
-        }
-
-        public ITableBuilderOptions<TModel> UseColumnsAsRows()
-        {
-            this.useColumnsAsRows = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds the custom header HTML row string before any other auto-generated header row.
-        /// If <c>thead</c> block doesn't exist (e.g. for horizontal-flow table) - it is created. 
-        /// </summary>
-        /// <returns>Table builder instance.</returns>
-        /// <example>.AddCustomHeaderRow("<tr><th colspan="3">Spanned title</th><th>Other title</th></tr>")</example>
-        public ITableBuilderOptions<TModel> AddCustomHeaderRow(string customHeaderRowHtml)
-        {
-            this.customHeaderRow = customHeaderRowHtml;
-            return this;
-        }
-
         internal void AddColumn<TProperty>(Expression<Func<TModel, TProperty>> expression)
         {
             var column = new TableColumn<TModel, TProperty>(expression, this.Model);
@@ -374,5 +428,14 @@ namespace KnockMvc.TableHelper
         {
             this.columns.Add(column);
         }
+    }
+
+    public class GroupedData<TModel>
+    {
+        public string GroupHeaderText { get; set; }
+
+        public string GroupHeaderCss { get; set; }
+
+        public ICollection<TModel> DataRows { get; set; }
     }
 }

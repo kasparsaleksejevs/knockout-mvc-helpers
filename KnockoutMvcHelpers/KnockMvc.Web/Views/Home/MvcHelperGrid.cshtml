@@ -64,7 +64,8 @@
     col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
     col.Bind(m => m.NullableDecimalValue);
-}).FooterText("Total:")
+    col.Bind(m => m.EnumValue);
+}).FooterText("Total:").GroupBy(g => g.EnumValue)
 
 @Html.TableFor(Model).UseColumnsAsRows().Css("table table-striped table-bordered table-hover table-condensed customColumnTable").Columns(col =>
 {
