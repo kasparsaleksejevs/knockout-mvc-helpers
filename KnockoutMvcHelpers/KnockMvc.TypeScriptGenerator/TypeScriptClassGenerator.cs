@@ -7,14 +7,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace KnockMvc.TypeScriptGeneration
+namespace KnockMvc.TypeScriptGenerator
 {
     /// <summary>
     /// TypeScript generator class.
     /// Supports generation of TS classes and enums (with text descriptions).
     /// </summary>
     /// <typeparam name="TGenerateAttribute">The type of the TS generation attribute.</typeparam>
-    public class TypeScriptGeneratorX<TGenerateAttribute> where TGenerateAttribute : Attribute
+    public class TypeScriptClassGenerator<TGenerateAttribute> where TGenerateAttribute : Attribute
     {
         /// <summary>
         /// The source assembly from which to take classes to generate TypeScript.
@@ -32,10 +32,10 @@ namespace KnockMvc.TypeScriptGeneration
         private IList<TsData> generatedData = new List<TsData>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TypeScriptGenerator{TGenerateAttribute}"/> class.
+        /// Initializes a new instance of the <see cref="TypeScriptClassGenerator{TGenerateAttribute}"/> class.
         /// </summary>
         /// <param name="sourceAssembly">The source assembly from which to take types to generate.</param>
-        public TypeScriptGeneratorX(Assembly sourceAssembly)
+        public TypeScriptClassGenerator(Assembly sourceAssembly)
         {
             this.sourceAssembly = sourceAssembly;
         }

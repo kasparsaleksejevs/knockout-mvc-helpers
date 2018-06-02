@@ -286,6 +286,9 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
-*.map
+*.js.map
 /KnockoutMvcHelpers/KnockMvc.Web/Scripts/KnockTable/KnockTable.js
 /KnockoutMvcHelpers/KnockMvc.Web/Scripts/GridSample.js
+/KnockoutMvcHelpers/KnockMvc.Web/Models/**/*.js
+/KnockoutMvcHelpers/KnockMvc.Web/Scripts/viewmodels/**/*.js
+
