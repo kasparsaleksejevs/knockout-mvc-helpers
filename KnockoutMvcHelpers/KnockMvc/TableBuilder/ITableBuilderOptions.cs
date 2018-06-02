@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Web;
 
 namespace KnockMvc.TableHelper
@@ -6,8 +7,6 @@ namespace KnockMvc.TableHelper
     public interface ITableBuilderOptions<TModel> : IHtmlString where TModel : class
     {
         ITableBuilderOptions<TModel> Columns(Action<ColumnBuilder<TModel>> builder);
-
-        //ITableBuilderOptions<TModel> Attributes(object htmlAttributes);
 
         ITableBuilderOptions<TModel> FooterText(string footerText);
 
@@ -21,5 +20,14 @@ namespace KnockMvc.TableHelper
         /// <returns>Table builder instance.</returns>
         /// <example>.AddCustomHeaderRow("<tr><th colspan="3">Spanned title</th><th>Other title</th></tr>")</example>
         ITableBuilderOptions<TModel> AddCustomHeaderRow(string customHeaderRowHtml);
+
+        /// <summary>
+        /// Groups the data by specified expression/property and displays groups as additional rows.
+        /// </summary>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <param name="expression">The expression to group by.</param>
+        /// <param name="cssClass">The optional CSS class to add to group header cell.</param>
+        /// <returns>Table builder instance.</returns>
+        ITableBuilderOptions<TModel> GroupBy<TProperty>(Expression<Func<TModel, TProperty>> expression, string cssClass = null);
     }
 }
