@@ -1,5 +1,5 @@
 ﻿module KnockMvc.DTO {
-    class CustomClassData {
+    export class CustomClassData {
         SomeInteger = ko.observable<number>();
         NiceDouble = ko.observable<number>();
 
@@ -11,12 +11,12 @@
         }
     }
 
-    interface ICustomClassData {
+    export interface ICustomClassData {
         SomeInteger: number;
         NiceDouble?: number;
     }
 
-    class OtherCustomData {
+    export class OtherCustomData {
         SomeIntValue = ko.observable<number>();
         SomeDoubleValue = ko.observable<number>();
         SomeString = ko.observable<string>();
@@ -34,7 +34,7 @@
         }
     }
 
-    interface IOtherCustomData {
+    export interface IOtherCustomData {
         SomeIntValue: number;
         SomeDoubleValue?: number;
         SomeString: string;
@@ -42,7 +42,7 @@
         Kek: number;
     }
 
-    class MyRow {
+    export class MyRow {
         IntValue = ko.observable<number>();
         DoubleValue = ko.observable<number>();
         DecimalValue = ko.observable<number>();
@@ -66,7 +66,7 @@
         }
     }
 
-    interface IMyRow {
+    export interface IMyRow {
         IntValue: number;
         DoubleValue: number;
         DecimalValue: number;
@@ -89,7 +89,7 @@
 }
 
 module KnockMvc.DTO.MyStuff {
-    class Person {
+    export class Person {
         FirstName = ko.observable<string>();
         Lastname = ko.observable<string>();
         Age = ko.observable<number>();
@@ -103,13 +103,13 @@ module KnockMvc.DTO.MyStuff {
         }
     }
 
-    interface IPerson {
+    export interface IPerson {
         FirstName: string;
         Lastname: string;
         Age: number;
     }
 
-    class RowGeneratorTestData {
+    export class RowGeneratorTestData {
         IntValue = ko.observable<number>();
         Person = ko.observable<Person>();
         IntArr = ko.observableArray<number>();
@@ -127,9 +127,9 @@ module KnockMvc.DTO.MyStuff {
             if (p) {
                 this.IntValue(p.IntValue);
                 this.Person(new Person(p.Person));
-                this.IntArr(p.IntArr);
-                this.IntList(p.IntList);
-                this.NullableIntList(p.NullableIntList);
+                this.IntArr.push(...p.IntArr);
+                this.IntList.push(...p.IntList);
+                this.NullableIntList.push(...p.NullableIntList);
                 this.DoubleValue(p.DoubleValue);
                 this.DecimalValue(p.DecimalValue);
                 this.NullableDecimalValue(p.NullableDecimalValue);
@@ -141,7 +141,7 @@ module KnockMvc.DTO.MyStuff {
         }
     }
 
-    interface IRowGeneratorTestData {
+    export interface IRowGeneratorTestData {
         IntValue: number;
         Person: IPerson;
         IntArr: number[];

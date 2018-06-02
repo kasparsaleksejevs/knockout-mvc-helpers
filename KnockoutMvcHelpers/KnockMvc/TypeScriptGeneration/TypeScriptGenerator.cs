@@ -83,41 +83,61 @@ namespace KnockMvc.TypeScriptGeneration
             if (this.generatedData.Any(m => m.Namespace == item.Namespace && m.Name == item.Name))
                 return;
 
-            var sb = new StringBuilder();
+            var sbClass = new StringBuilder();
             var sbInterface = new StringBuilder();
-            sb.AppendLine();
-            sb.AppendLine($"    class {item.Name} {{");
+            sbClass.AppendLine();
+            sbClass.AppendLine($"    export class {item.Name} {{");
 
             sbInterface.AppendLine();
-            sbInterface.AppendLine($"    interface I{item.Name} {{");
+            sbInterface.AppendLine($"    export interface I{item.Name} {{");
 
             foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                sb.AppendLine($"        {prop.Name} = {this.GetPropertyDefinition(prop)}");
+                sbClass.AppendLine($"        {prop.Name} = {this.GetPropertyDefinition(prop)}");
                 sbInterface.AppendLine($"        {prop.Name}{this.GetPropertyInterfaceDefinition(prop)}");
             }
 
             // add constructor
-            sb.AppendLine();
-            sb.AppendLine($"        constructor(p?: I{item.Name}) {{");
-            sb.AppendLine("            if (p) {");
+            sbClass.AppendLine();
+            sbClass.AppendLine($"        constructor(p?: I{item.Name}) {{");
+            sbClass.AppendLine("            if (p) {");
             foreach (var prop in item.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (prop.PropertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
-                    sb.AppendLine($"                this.{prop.Name}(new {prop.Name}(p.{prop.Name}));");
+                if (this.IsPropertyArray(prop.PropertyType))
+                {
+                    Type arrayElementType;
+                    if (prop.PropertyType.IsGenericType)
+                        arrayElementType = prop.PropertyType.GetGenericArguments()[0];
+                    else
+                        arrayElementType = prop.PropertyType.GetElementType();
+
+                    if (arrayElementType.GetCustomAttribute<TGenerateAttribute>(false) != null)
+                    {
+                        sbClass.AppendLine($"                this.{prop.Name}([]);");
+                        sbClass.AppendLine($"                p.{prop.Name}.forEach((item) => {{");
+                        sbClass.AppendLine($"                    this.{prop.Name}.push(new {arrayElementType.Name}(item));");
+                        sbClass.AppendLine($"                }});");
+                    }
+                    else
+                        sbClass.AppendLine($"                this.{prop.Name}.push(...p.{prop.Name});");
+                }
                 else
-                    sb.AppendLine($"                this.{prop.Name}(p.{prop.Name});");
+                {
+                    if (prop.PropertyType.GetCustomAttribute<TGenerateAttribute>(false) != null && !prop.PropertyType.IsEnum)
+                        sbClass.AppendLine($"                this.{prop.Name}(new {prop.PropertyType.Name}(p.{prop.Name}));");
+                    else
+                        sbClass.AppendLine($"                this.{prop.Name}(p.{prop.Name});");
+                }
             }
 
-
-            sb.AppendLine("            }");
-            sb.AppendLine("        }");
-            sb.AppendLine("    }");
+            sbClass.AppendLine("            }");
+            sbClass.AppendLine("        }");
+            sbClass.AppendLine("    }");
             sbInterface.AppendLine("    }");
 
-            sb.Append(sbInterface);
+            sbClass.Append(sbInterface);
 
-            this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsClass });
+            this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sbClass.ToString(), ContentType = ContentTypeEnum.TsClass });
         }
 
         /// <summary>
@@ -133,21 +153,19 @@ namespace KnockMvc.TypeScriptGeneration
             var propertyType = property.PropertyType;
 
             // is it an Array?
-            var isArray = false;
-            if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
+            var isArray = this.IsPropertyArray(propertyType);
+            if (isArray)
             {
                 if (propertyType.IsGenericType)
                     propertyType = propertyType.GetGenericArguments()[0];
                 else
                     propertyType = propertyType.GetElementType();
-
-                isArray = true;
             }
 
             var tsPropertyType = "string";
 
             // is it a subclass?
-            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
+            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null && !propertyType.IsEnum)
             {
                 this.GenerateTsClass(propertyType);
                 tsPropertyType = propertyType.Name;
@@ -206,7 +224,7 @@ namespace KnockMvc.TypeScriptGeneration
                 nullableSymbol = "?";
 
             // is it a subclass?
-            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null)
+            if (propertyType.GetCustomAttribute<TGenerateAttribute>(false) != null && !propertyType.IsEnum)
                 tsPropertyType = "I" + propertyType.Name;
             else if (propertyType.IsEnum)
                 tsPropertyType = "number";
@@ -281,6 +299,18 @@ namespace KnockMvc.TypeScriptGeneration
                 nullableSymbol = "?";
 
             return $"ko.observable<{propertyType.Name}{nullableSymbol}>();";
+        }
+
+        /// <summary>
+        /// Determines whether the specified property type is an array.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <returns>
+        ///   <c>True</c> if the specified property type is an array; otherwise, <c>false</c>.
+        /// </returns>
+        private bool IsPropertyArray(Type propertyType)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string);
         }
 
         /// <summary>
