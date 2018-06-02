@@ -1,10 +1,11 @@
 ﻿<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ assembly name="$(TargetDir)KnockMvc.dll" #><# /*  */ #>
+<#@ assembly name="$(TargetDir)KnockMvc.TypeScriptGenerator.dll" #><# /*  */ #>
 <#@ assembly name="$(TargetDir)KnockMvc.DTO.dll" #><# /* DLL where the data classes to be generated to TS resides */ #>
 <#@ assembly name="$(TargetDir)KnockMvc.Common.dll" #><# /* DLL where the TypeScript generation attribute resides */ #>
 <#@ assembly name="EnvDTE" #><# /* This assembly provides access to Visual Studio project properties. */ #>
 <#@ output extension=".ts" #><# /* T4 needs to create a file, even if it is a dummy file. Currently full TS file is written to the output */ #>
 <# var serviceProvider = this.Host as IServiceProvider; #>
 <# /*= KnockMvc.Common.TypeScriptGenerateAttribute.GenerateJsFiles(typeof(KnockMvc.DTO.CustomClassData).Assembly, serviceProvider) */ #>
-<#= new KnockMvc.TypeScriptGeneration.TypeScriptGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate() #>
+<#= new KnockMvc.TypeScriptGenerator.TypeScriptClassGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate() #>

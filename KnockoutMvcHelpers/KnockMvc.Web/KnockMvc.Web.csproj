@@ -249,6 +249,10 @@
       <Project>{2a0a3d43-6046-407c-ad2b-bd1fa70f5ad1}</Project>
       <Name>KnockMvc.DTO</Name>
     </ProjectReference>
+    <ProjectReference Include="..\KnockMvc.TypeScriptGenerator\KnockMvc.TypeScriptGenerator.csproj">
+      <Project>{e100a8bf-9d0d-4e4e-b56f-5632ee7b6f71}</Project>
+      <Name>KnockMvc.TypeScriptGenerator</Name>
+    </ProjectReference>
     <ProjectReference Include="..\KnockMvc\KnockMvc.csproj">
       <Project>{f5e4ee0e-f696-445b-86bf-60261074a59b}</Project>
       <Name>KnockMvc</Name>
