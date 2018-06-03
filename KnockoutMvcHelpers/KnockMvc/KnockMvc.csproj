@@ -77,7 +77,6 @@
     <Compile Include="TableBuilder\ITableColumn.cs" />
     <Compile Include="TableBuilder\TableBuilder.cs" />
     <Compile Include="TableBuilder\TableColumn.cs" />
-    <Compile Include="TypeScriptGeneration\TypeScriptGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

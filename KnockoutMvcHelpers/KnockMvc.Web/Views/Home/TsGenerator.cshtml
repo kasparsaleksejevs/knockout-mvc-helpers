@@ -5,5 +5,10 @@
 <h2>TypeScript Generator</h2>
 
 <pre style="background-color:#e4f0fb;padding:10px;">
-@(new KnockMvc.TypeScriptGeneration.TypeScriptGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate())
+@(new KnockMvc.TypeScriptGenerator.TypeScriptClassGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate())
 </pre>
+
+
+@*<pre style="background-color:#e4f0fb;padding:10px;">
+@(new KnockMvc.TypeScriptGenerator.TypeScriptControllersGenerator<KnockMvc.Common.TypeScriptControllerGenerateAttribute>(typeof(KnockMvc.Web.Controllers.api.GridController).Assembly).Generate())
+</pre>*@

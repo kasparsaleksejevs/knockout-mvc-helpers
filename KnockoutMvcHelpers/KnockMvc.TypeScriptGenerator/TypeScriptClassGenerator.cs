@@ -14,22 +14,22 @@ namespace KnockMvc.TypeScriptGenerator
     /// Supports generation of TS classes and enums (with text descriptions).
     /// </summary>
     /// <typeparam name="TGenerateAttribute">The type of the TS generation attribute.</typeparam>
-    public class TypeScriptClassGenerator<TGenerateAttribute> where TGenerateAttribute : Attribute
+    public partial class TypeScriptClassGenerator<TGenerateAttribute> where TGenerateAttribute : Attribute
     {
         /// <summary>
         /// The source assembly from which to take classes to generate TypeScript.
         /// </summary>
-        private Assembly sourceAssembly = null;
+        private readonly Assembly sourceAssembly = null;
 
         /// <summary>
         /// The types for which to generate TypeScript.
         /// </summary>
-        private IList<Type> types = new List<Type>();
+        private readonly IList<Type> types = new List<Type>();
 
         /// <summary>
         /// The generated data - namespace, contents and content type.
         /// </summary>
-        private IList<TsData> generatedData = new List<TsData>();
+        private readonly IList<TypeScriptData> generatedData = new List<TypeScriptData>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeScriptClassGenerator{TGenerateAttribute}"/> class.
@@ -137,7 +137,7 @@ namespace KnockMvc.TypeScriptGenerator
 
             sbClass.Append(sbInterface);
 
-            this.generatedData.Add(new TsData { Namespace = item.Namespace, Name = item.Name, Contents = sbClass.ToString(), ContentType = ContentTypeEnum.TsClass });
+            this.generatedData.Add(new TypeScriptData { Namespace = item.Namespace, Name = item.Name, Contents = sbClass.ToString(), ContentType = TypeScriptDataContentTypeEnum.TsClass });
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace KnockMvc.TypeScriptGenerator
                 sb.AppendLine("    ]);");
                 // enum description call example: 'var textVal = MyEnumText.get(MyEnum.Val2); // will get "Other (Descr)"'
 
-                this.generatedData.Add(new TsData { Namespace = propertyType.Namespace, Name = propertyType.Name, Contents = sb.ToString(), ContentType = ContentTypeEnum.TsEnum });
+                this.generatedData.Add(new TypeScriptData { Namespace = propertyType.Namespace, Name = propertyType.Name, Contents = sb.ToString(), ContentType = TypeScriptDataContentTypeEnum.TsEnum });
             }
 
             var nullableSymbol = string.Empty;
@@ -311,30 +311,6 @@ namespace KnockMvc.TypeScriptGenerator
         private bool IsPropertyArray(Type propertyType)
         {
             return typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string);
-        }
-
-        /// <summary>
-        /// Class to hold generated TS data.
-        /// </summary>
-        private class TsData
-        {
-            public string Namespace { get; set; }
-
-            public string Name { get; set; }
-
-            public string Contents { get; set; }
-
-            public ContentTypeEnum ContentType { get; set; }
-        }
-
-        /// <summary>
-        /// Enum to denote type of generated TS content.
-        /// </summary>
-        private enum ContentTypeEnum
-        {
-            TsClass = 1,
-
-            TsEnum = 2
         }
     }
 }
