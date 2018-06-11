@@ -8,6 +8,16 @@ namespace KnockMvc.DTO
     [TypeScriptGenerate]
     public class CustomClassData
     {
+        public readonly string ReadonlyStr = "Readonly String";
+
+        public const string ConstStr = "Constant String";
+
+        public static readonly int ReadonlyStaticInt = 4200;
+
+        public readonly int ReadonlyInt = 42;
+
+        public const int ConstInt = 420;
+
         public int SomeInteger { get; set; }
 
         public double? NiceDouble { get; set; }

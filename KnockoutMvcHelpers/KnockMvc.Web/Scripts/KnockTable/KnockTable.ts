@@ -1,5 +1,18 @@
 ﻿module KnockMvc.KnockTable {
 
+    interface IResponseType {
+
+    }
+
+    class ResponseType {
+        Id = ko.observable<number>();
+    }
+
+    class RequestType {
+
+    }
+
+
     export class KnockoutTable<TRowData> {
         Rows = ko.observableArray<Row<TRowData>>([]);
         IsSelectable = ko.observable(false);
@@ -8,6 +21,27 @@
         HasAnyRow = ko.computed(() => {
             return this.Rows && this.Rows().length > 0;
         });
+
+        // ==================
+
+        test = () => {
+            this.callBackend_ApiGetMyStyff(new RequestType(), (response) => {
+                var x = response.Id();
+            });
+        }
+
+        callBackend_ApiGetMyStyff = (data: RequestType, callback: (response: ResponseType) => void) => {
+            return $.ajax({
+                url: 'api/url',
+                type: 'POST',
+                data: data,
+                success: (response: IResponseType) => {
+                    callback(new ResponseType());
+                }
+            });
+        }
+
+        // ==================
 
         IsAnySelected = ko.computed(() => {
             if (!this.Rows || this.Rows().length === 0) {
