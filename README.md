@@ -30,3 +30,8 @@ public class MyRow
 and that's it! This will generate a simple table with headers and rows for your model. 
 
 3. [optional] Customize the generated table using helper methods, like, apply custom css classes for whole table or columns, add custom footer or appply formatting for the cell values.
+
+
+# Work in Progress
+- KnockMvc.TypeScriptGenerator - library to generate TypeScript viewmodels and WEB API proxy methods from C# classes/enums and WEB API methods. Currently viewmodel generation is working with few TODOs, proxy generation at initial stages
+- KnockMvc - auto-generated Knockout binding for tables
