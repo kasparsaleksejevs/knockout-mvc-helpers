@@ -87,10 +87,10 @@ namespace KnockMvc.TypeScriptGenerator
             var sbInterface = new StringBuilder();
             sbClass.AppendLine();
             sbClass.AppendLine($"    export class {classToGenerate.Name} {{");
+            this.GenerateConstAndReadonlyProperties(classToGenerate, sbClass);
 
             sbInterface.AppendLine();
             sbInterface.AppendLine($"    export interface I{classToGenerate.Name} {{");
-            this.GenerateConstAndReadonlyProperties(classToGenerate, sbClass);
 
             foreach (var prop in classToGenerate.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -112,7 +112,7 @@ namespace KnockMvc.TypeScriptGenerator
                     else
                         arrayElementType = prop.PropertyType.GetElementType();
 
-                    if (typeOfAttribute == null || arrayElementType.GetCustomAttribute(typeOfAttribute, false) != null)
+                    if (this.ShouldGenerateSubclass(arrayElementType, typeOfAttribute))
                     {
                         sbClass.AppendLine($"                this.{prop.Name}([]);");
                         sbClass.AppendLine($"                if (p.{prop.Name}) {{");
@@ -126,7 +126,7 @@ namespace KnockMvc.TypeScriptGenerator
                 }
                 else
                 {
-                    if (typeOfAttribute == null || (prop.PropertyType.GetCustomAttribute(typeOfAttribute, false) != null && !prop.PropertyType.IsEnum))
+                    if (this.ShouldGenerateSubclass(prop.PropertyType, typeOfAttribute))
                         sbClass.AppendLine($"                this.{prop.Name}(new {prop.PropertyType.Name}(p.{prop.Name}));");
                     else if (prop.PropertyType == typeof(DateTime) || prop.PropertyType == typeof(DateTime?))
                         sbClass.AppendLine($"                this.{prop.Name}(new Date(p.{prop.Name}));");
@@ -178,6 +178,29 @@ namespace KnockMvc.TypeScriptGenerator
         }
 
         /// <summary>
+        /// Determines if it is needed to generate class for the property type.
+        /// If we do not specify the TS Generation attribute, then all custom types should be generated (except System types).
+        /// Otherwise - we check if it has TS Generation attribute and is not an enum.
+        /// </summary>
+        /// <param name="propertyType">Type of the property.</param>
+        /// <param name="typeOfAttribute">The type of attribute.</param>
+        /// <returns></returns>
+        private bool ShouldGenerateSubclass(Type propertyType, Type typeOfAttribute)
+        {
+            // do not generate classes for enums, as they should be handled as enums!
+            if (propertyType.IsEnum)
+                return false;
+
+            if (typeOfAttribute == null)
+            {
+                // we are generating TS for specific types, without taking into account TSGen attributes, so check if it is 'system' type
+                return !propertyType.FullName.StartsWith("System.");
+            }
+
+            return propertyType.GetCustomAttribute(typeOfAttribute, false) != null;
+        }
+
+        /// <summary>
         /// Gets the property definition in the form 'ko.observable&lt;number&gt;>();'.
         /// </summary>
         /// <param name="property">The property info.</param>
@@ -202,16 +225,16 @@ namespace KnockMvc.TypeScriptGenerator
             var tsPropertyType = "string";
 
             // is it a subclass?
-            if (typeOfAttribute == null || (propertyType.GetCustomAttribute(typeOfAttribute, false) != null && !propertyType.IsEnum))
+            if (this.ShouldGenerateSubclass(propertyType, typeOfAttribute))
             {
-                this.GenerateTsClass(propertyType, typeOfAttribute);
+                this.GenerateTsClass(propertyType, typeOfAttribute); // ToDo: generate correct namespace for the type
                 tsPropertyType = propertyType.Name;
             }
             else
             {
                 // is it an Enum?
                 if (propertyType.IsEnum)
-                    return this.GenerateEnum(propertyType);
+                    return this.GenerateEnum(propertyType); // ToDo: generate correct namespace for the type
 
                 if (propertyType == typeof(int) || propertyType == typeof(int?)
                     || propertyType == typeof(decimal) || propertyType == typeof(decimal?)
@@ -261,7 +284,7 @@ namespace KnockMvc.TypeScriptGenerator
                 nullableSymbol = "?";
 
             // is it a subclass?
-            if (typeOfAttribute == null || (propertyType.GetCustomAttribute(typeOfAttribute, false) != null && !propertyType.IsEnum))
+            if (this.ShouldGenerateSubclass(propertyType, typeOfAttribute))
                 tsPropertyType = "I" + propertyType.Name;
             else if (propertyType.IsEnum)
                 tsPropertyType = "number";
@@ -300,14 +323,14 @@ namespace KnockMvc.TypeScriptGenerator
                 var fields = propertyType.GetFields(BindingFlags.Public | BindingFlags.Static);
 
                 sb.AppendLine();
-                sb.AppendLine($"    enum {propertyType.Name} {{");
+                sb.AppendLine($"    export enum {propertyType.Name} {{");
                 foreach (var item in fields)
                     sb.AppendLine($"        {item.Name} = {item.GetRawConstantValue()},");
 
                 sb.AppendLine("    }");
 
                 sb.AppendLine();
-                sb.AppendLine($"    const {propertyType.Name}Text = new Map<number, string>([");
+                sb.AppendLine($"    export const {propertyType.Name}Text = new Map<number, string>([");
                 foreach (var enumField in fields)
                 {
                     var enumDescription = string.Empty;

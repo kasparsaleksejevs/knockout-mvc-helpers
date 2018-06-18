@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnockMvc", "KnockMvc\KnockM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnockMvc.TypeScriptGenerator", "KnockMvc.TypeScriptGenerator\KnockMvc.TypeScriptGenerator.csproj", "{E100A8BF-9D0D-4E4E-B56F-5632EE7B6F71}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTypeScriptGenerator", "ConsoleTypeScriptGenerator\ConsoleTypeScriptGenerator.csproj", "{2C138656-752D-46AF-8AF8-2DBABF1861CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{E100A8BF-9D0D-4E4E-B56F-5632EE7B6F71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E100A8BF-9D0D-4E4E-B56F-5632EE7B6F71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E100A8BF-9D0D-4E4E-B56F-5632EE7B6F71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C138656-752D-46AF-8AF8-2DBABF1861CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C138656-752D-46AF-8AF8-2DBABF1861CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C138656-752D-46AF-8AF8-2DBABF1861CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C138656-752D-46AF-8AF8-2DBABF1861CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
