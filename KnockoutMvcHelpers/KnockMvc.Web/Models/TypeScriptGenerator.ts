@@ -1,5 +1,16 @@
 ﻿module KnockMvc.DTO {
     export class CustomClassData {
+        public static readonly ConstStr = 'Constant String';
+        public static readonly ConstInt = 420;
+        public static readonly ReadonlyStaticInt = 4200;
+        public readonly ReadonlyStr = 'Readonly String';
+        public readonly ReadonlyInt = 42;
+        public readonly ReadonlyDate = new Date('2018-06-18T22:08:22');
+        public readonly ReadonlyDecNull = null;
+        public readonly ReadonlyDecOk = 42.56;
+        public readonly ReadonlyBool = true;
+        public readonly ReadonlyStringList = ['test1', 'test2', 'test3'];
+        public readonly ReadonlyBoolList = [true, false, true, true];
         SomeInteger = ko.observable<number>();
         NiceDouble = ko.observable<number>();
 
@@ -28,7 +39,7 @@
                 this.SomeIntValue(p.SomeIntValue);
                 this.SomeDoubleValue(p.SomeDoubleValue);
                 this.SomeString(p.SomeString);
-                this.SomeDate(p.SomeDate);
+                this.SomeDate(new Date(p.SomeDate));
                 this.Kek(p.Kek);
             }
         }
@@ -60,7 +71,7 @@
                 this.NullableDecimalValue(p.NullableDecimalValue);
                 this.StringValue(p.StringValue);
                 this.BoolValue(p.BoolValue);
-                this.DateValue(p.DateValue);
+                this.DateValue(new Date(p.DateValue));
                 this.EnumValue(p.EnumValue);
             }
         }
@@ -135,7 +146,7 @@ module KnockMvc.DTO.MyStuff {
                 this.NullableDecimalValue(p.NullableDecimalValue);
                 this.StringValue(p.StringValue);
                 this.BoolValue(p.BoolValue);
-                this.DateValue(p.DateValue);
+                this.DateValue(new Date(p.DateValue));
                 this.EnumValue(p.EnumValue);
             }
         }

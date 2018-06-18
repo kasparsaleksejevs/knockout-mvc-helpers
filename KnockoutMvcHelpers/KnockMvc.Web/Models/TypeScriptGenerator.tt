@@ -8,4 +8,4 @@
 <#@ output extension=".ts" #><# /* T4 needs to create a file, even if it is a dummy file. Currently full TS file is written to the output */ #>
 <# var serviceProvider = this.Host as IServiceProvider; #>
 <# /*= KnockMvc.Common.TypeScriptGenerateAttribute.GenerateJsFiles(typeof(KnockMvc.DTO.CustomClassData).Assembly, serviceProvider) */ #>
-<#= new KnockMvc.TypeScriptGenerator.TypeScriptClassGenerator<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly).Generate() #>
+<#= new KnockMvc.TypeScriptGenerator.TypeScriptClassGenerator().Generate<KnockMvc.Common.TypeScriptGenerateAttribute>(typeof(KnockMvc.DTO.CustomClassData).Assembly) #>
