@@ -16,6 +16,18 @@ namespace KnockMvc.DTO
 
         public readonly int ReadonlyInt = 42;
 
+        public readonly DateTime ReadonlyDate = DateTime.Now;
+
+        public readonly decimal? ReadonlyDecNull = null;
+
+        public readonly decimal ReadonlyDecOk = 42.56m;
+
+        public readonly bool ReadonlyBool = true;
+
+        public readonly List<string> ReadonlyStringList = new List<string> { "test1", "test2", "test3" };
+
+        public readonly List<bool> ReadonlyBoolList = new List<bool> { true, false, true, true };
+
         public const int ConstInt = 420;
 
         public int SomeInteger { get; set; }
