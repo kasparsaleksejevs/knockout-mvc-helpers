@@ -74,6 +74,21 @@ namespace KnockMvc.TypeScriptGenerator
             return tempResult;
         }
 
+        private string GenerateClassName(Type classToGenerate)
+        {
+            if (!classToGenerate.IsGenericType)
+                return classToGenerate.Name;
+
+            var className = classToGenerate.Name.Substring(0, classToGenerate.Name.IndexOf('`'));
+            var types = new List<string>();
+            foreach (var item in classToGenerate.GetGenericArguments())
+                types.Add(item.Name);
+
+            className += $"<{string.Join(", ", types)}>";
+
+            return className;
+        }
+
         /// <summary>
         /// Generates the ts class.
         /// </summary>
@@ -83,26 +98,34 @@ namespace KnockMvc.TypeScriptGenerator
             if (this.generatedData.Any(m => m.Namespace == classToGenerate.Namespace && m.Name == classToGenerate.Name))
                 return;
 
+            var genericClass = classToGenerate;
+            if (classToGenerate.IsConstructedGenericType)
+                genericClass = classToGenerate.GetGenericTypeDefinition();
+
+            var className = this.GenerateClassName(genericClass);
+
+            // https://stackoverflow.com/questions/17480990/get-name-of-generic-class-without-tilde
+
             var sbClass = new StringBuilder();
             var sbInterface = new StringBuilder();
             sbClass.AppendLine();
-            sbClass.AppendLine($"    export class {classToGenerate.Name} {{");
-            this.GenerateConstAndReadonlyProperties(classToGenerate, sbClass);
+            sbClass.AppendLine($"    export class {className} {{");
+            this.GenerateConstAndReadonlyProperties(genericClass, sbClass);
 
             sbInterface.AppendLine();
-            sbInterface.AppendLine($"    export interface I{classToGenerate.Name} {{");
+            sbInterface.AppendLine($"    export interface I{className} {{");
 
-            foreach (var prop in classToGenerate.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var prop in genericClass.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                sbClass.AppendLine($"        {prop.Name} = {this.GetPropertyDefinition(prop, typeOfAttribute)}");
-                sbInterface.AppendLine($"        {prop.Name}{this.GetPropertyInterfaceDefinition(prop, typeOfAttribute)}");
+                sbClass.AppendLine($"        {prop.Name} = {this.GetKnockoutPropertyDefinition(prop.PropertyType, typeOfAttribute)}");
+                sbInterface.AppendLine($"        {prop.Name}{this.GetPropertyInterfaceDefinition(prop.PropertyType, typeOfAttribute)}");
             }
 
             // add constructor
             sbClass.AppendLine();
-            sbClass.AppendLine($"        constructor(p?: I{classToGenerate.Name}) {{");
+            sbClass.AppendLine($"        constructor(p?: I{className}) {{");
             sbClass.AppendLine("            if (p) {");
-            foreach (var prop in classToGenerate.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var prop in genericClass.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (this.IsPropertyArray(prop.PropertyType))
                 {
@@ -112,12 +135,14 @@ namespace KnockMvc.TypeScriptGenerator
                     else
                         arrayElementType = prop.PropertyType.GetElementType();
 
+                    var arrayElementTypeName = this.GeneratePropertyType(arrayElementType, typeOfAttribute);
+
                     if (this.ShouldGenerateSubclass(arrayElementType, typeOfAttribute))
                     {
                         sbClass.AppendLine($"                this.{prop.Name}([]);");
                         sbClass.AppendLine($"                if (p.{prop.Name}) {{");
                         sbClass.AppendLine($"                    p.{prop.Name}.forEach((item) => {{");
-                        sbClass.AppendLine($"                        this.{prop.Name}.push(new {arrayElementType.Name}(item));");
+                        sbClass.AppendLine($"                        this.{prop.Name}.push(new {arrayElementTypeName}(item));");
                         sbClass.AppendLine($"                    }});");
                         sbClass.AppendLine($"                }}");
                     }
@@ -142,7 +167,7 @@ namespace KnockMvc.TypeScriptGenerator
 
             sbClass.Append(sbInterface);
 
-            this.generatedData.Add(new TypeScriptData { Namespace = classToGenerate.Namespace, Name = classToGenerate.Name, Contents = sbClass.ToString(), ContentType = TypeScriptDataContentTypeEnum.TsClass });
+            this.generatedData.Add(new TypeScriptData { Namespace = genericClass.Namespace, Name = className, Contents = sbClass.ToString(), ContentType = TypeScriptDataContentTypeEnum.TsClass });
         }
 
         private void GenerateConstAndReadonlyProperties(Type classToGenerate, StringBuilder sbClass)
@@ -194,10 +219,35 @@ namespace KnockMvc.TypeScriptGenerator
             if (typeOfAttribute == null)
             {
                 // we are generating TS for specific types, without taking into account TSGen attributes, so check if it is 'system' type
-                return !propertyType.FullName.StartsWith("System.");
+                return !propertyType?.FullName?.StartsWith("System.") ?? false;
             }
 
             return propertyType.GetCustomAttribute(typeOfAttribute, false) != null;
+        }
+
+        private string GeneratePropertyType(Type propertyType, Type typeOfAttribute)
+        {
+            if (!propertyType.IsGenericType)
+                return propertyType.Name;
+
+            var propertyName = propertyType.Name.Substring(0, propertyType.Name.IndexOf('`'));
+            var types = new List<string>();
+            foreach (var item in propertyType.GetGenericArguments())
+            {
+                types.Add(this.GetPropertyDefinition(item, typeOfAttribute));
+            }
+
+            propertyName += $"<{string.Join(", ", types)}>";
+
+            return propertyName;
+        }
+
+        private string GetKnockoutPropertyDefinition(Type propertyType, Type typeOfAttribute)
+        {
+            var tsPropertyType = this.GetPropertyDefinition(propertyType, typeOfAttribute);
+            var isArray = this.IsPropertyArray(propertyType);
+            var koType = isArray ? "observableArray" : "observable";
+            return $"ko.{koType}<{tsPropertyType}>();";
         }
 
         /// <summary>
@@ -205,12 +255,10 @@ namespace KnockMvc.TypeScriptGenerator
         /// </summary>
         /// <param name="property">The property info.</param>
         /// <returns>Property definition</returns>
-        private string GetPropertyDefinition(PropertyInfo property, Type typeOfAttribute)
+        private string GetPropertyDefinition(Type propertyType, Type typeOfAttribute)
         {
             // ToDo: default values?
             // ToDo: cycle checking for custom classes
-
-            var propertyType = property.PropertyType;
 
             // is it an Array?
             var isArray = this.IsPropertyArray(propertyType);
@@ -228,7 +276,7 @@ namespace KnockMvc.TypeScriptGenerator
             if (this.ShouldGenerateSubclass(propertyType, typeOfAttribute))
             {
                 this.GenerateTsClass(propertyType, typeOfAttribute); // ToDo: generate correct namespace for the type
-                tsPropertyType = propertyType.Name;
+                tsPropertyType = this.GeneratePropertyType(propertyType, typeOfAttribute);
             }
             else
             {
@@ -250,10 +298,12 @@ namespace KnockMvc.TypeScriptGenerator
 
                 if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
                     tsPropertyType = "Date";
+
+                if (propertyType.FullName == null) // it is a generic type
+                    tsPropertyType = propertyType.Name;
             }
 
-            var koType = isArray ? "observableArray" : "observable";
-            return $"ko.{koType}<{tsPropertyType}>();";
+            return tsPropertyType;
         }
 
         /// <summary>
@@ -261,10 +311,8 @@ namespace KnockMvc.TypeScriptGenerator
         /// </summary>
         /// <param name="property">The property info.</param>
         /// <returns>Property definition</returns>
-        private string GetPropertyInterfaceDefinition(PropertyInfo property, Type typeOfAttribute)
+        private string GetPropertyInterfaceDefinition(Type propertyType, Type typeOfAttribute)
         {
-            var propertyType = property.PropertyType;
-
             // is it an Array?
             var isArray = false;
             if (typeof(IEnumerable).IsAssignableFrom(propertyType) && propertyType != typeof(string))
@@ -285,7 +333,7 @@ namespace KnockMvc.TypeScriptGenerator
 
             // is it a subclass?
             if (this.ShouldGenerateSubclass(propertyType, typeOfAttribute))
-                tsPropertyType = "I" + propertyType.Name;
+                tsPropertyType = "I" + GeneratePropertyType(propertyType, null);
             else if (propertyType.IsEnum)
                 tsPropertyType = "number";
             else
@@ -304,6 +352,9 @@ namespace KnockMvc.TypeScriptGenerator
 
                 if (propertyType == typeof(DateTime) || propertyType == typeof(DateTime?))
                     tsPropertyType = "Date";
+
+                if (propertyType.FullName == null) // it is a generic type
+                    tsPropertyType = propertyType.Name;
             }
 
             var arraySpecifier = isArray ? "[]" : string.Empty;
