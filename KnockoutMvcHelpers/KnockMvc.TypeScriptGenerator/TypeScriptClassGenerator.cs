@@ -390,7 +390,7 @@ namespace KnockMvc.TypeScriptGenerator
                     else
                     {
                         // for legacy MVC3+ projects the DescriptionAttribute is usually used
-                        if (enumField.GetCustomAttribute(typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttr)
+                        if (enumField.GetCustomAttributes(typeof(DescriptionAttribute)).FirstOrDefault() is DescriptionAttribute descriptionAttr)
                             enumDescription = descriptionAttr.Description;
                         else
                             enumDescription = enumField.Name;
