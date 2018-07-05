@@ -67,23 +67,32 @@ namespace KnockMvc.TypeScriptGenerator
             foreach (var method in methods)
             {
                 var methodName = method.Name;
-                var parStr = new List<string>();
+                var functionParameters = new List<string>();
                 var methodType = this.GetActionType(method);
                 var url = this.GenerateUrl(item, method, methodType);
 
-
                 var parameters = method.GetParameters();
                 foreach (var parameter in parameters)
-                    parStr.Add($"{parameter.Name}: {parameter.ParameterType.Name}");
+                    functionParameters.Add($"{parameter.Name}: {parameter.ParameterType.Name}"); //ToDo: use TypeScriptClassGenerator.GetPropertyInterfaceDefinition to get correct parameter type in JS
 
-                parStr.Add("callback: (response: ResponseType) => void");
+                functionParameters.Add("callback: (response: ResponseType) => void");
+
+                var dataParams = new List<string>();
+                foreach (var parameter in parameters)
+                {
+                    if (!url.Contains("{" + parameter.Name + "}"))
+                        dataParams.Add($"{parameter.Name}: {parameter.Name}");
+                }
+
+                var data = string.Empty;
+                if (dataParams.Count > 0)
+                    data = "\r\n            data: {" + string.Join(",", dataParams) + "},";
 
                 var methodBody = $@"
-    {method.Name} = ({string.Join(", ", parStr)}) => {{
+    {method.Name} = ({string.Join(", ", functionParameters)}) => {{
         $.ajax({{ 
             url: `{url}`,
-            type: '{methodType.ToString().ToUpperInvariant()}',
-            data: 'ss',
+            type: '{methodType.ToString().ToUpperInvariant()}', {data}
             success: (response: IResponseType) => {{
                 callback(new ResponseType(response));
             }}
@@ -169,12 +178,19 @@ namespace KnockMvc.TypeScriptGenerator
                     urlParts.UpdatePart("{controller}", this.GetControllerNameShortened(controller.Name));
                 }
 
-                if (routeAttribute != null)
+                // if we have route atribute with template - use template, else - if has routePrefix - leave as is, else - add method name
+                if (routeAttribute != null && !string.IsNullOrEmpty(routeAttribute.Template))
                     urlParts.AddRange(routeAttribute.Template.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries));
-                else
+                else if (routePrefix == null)
                 {
                     if (!recognizedActions.Any(m => m.Equals(action.Name, StringComparison.InvariantCultureIgnoreCase)))
                         urlParts.Add(action.Name);
+                }
+
+                for (int i = 0; i < urlParts.Count; i++)
+                {
+                    if (urlParts[i].StartsWith("{"))
+                        urlParts[i] = "$" + urlParts[i];
                 }
             }
 
