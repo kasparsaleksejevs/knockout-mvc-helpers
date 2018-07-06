@@ -11,8 +11,9 @@ namespace ConsoleTypeScriptGenerator
         {
             Console.WriteLine("TypeScript generation console");
             Console.WriteLine("-----------------------------");
-            Console.WriteLine("Usage: supply required arguments in the command line, e.g., 'ConsoleTypeScriptGenerator.exe <Class_Full_Name> <Path_To_Assembly>'");
-            Console.WriteLine("       or use interactive mode and write required info manually");
+            Console.WriteLine("Usage: supply required arguments in the command line, ");
+            Console.WriteLine("    e.g., 'ConsoleTypeScriptGenerator.exe <Class_Full_Name> <Full_Path_to_Assembly.dll>'");
+            Console.WriteLine("or use interactive mode and write required info manually");
 
             var mainColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
@@ -29,10 +30,10 @@ namespace ConsoleTypeScriptGenerator
             {
                 Console.WriteLine("===============");
 
-                Console.WriteLine("Enter the full name of the class to generate TS from: ");
+                Console.WriteLine("Enter the full name of the class to generate TS from (e.g., MyNamespace.MyModel): ");
                 typeToGen = Console.ReadLine();
 
-                Console.WriteLine("Enter the full path to the containing assembly: ");
+                Console.WriteLine("Enter the full path to the containing assembly (e.g. \"C:\\stuff\\mydata.dll\"): ");
                 pathToAssembly = Console.ReadLine();
             }
 

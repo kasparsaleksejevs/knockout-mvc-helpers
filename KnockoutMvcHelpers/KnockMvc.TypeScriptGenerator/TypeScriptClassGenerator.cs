@@ -409,7 +409,7 @@ namespace KnockMvc.TypeScriptGenerator
             if (Nullable.GetUnderlyingType(propertyType) != null)
                 nullableSymbol = "?";
 
-            return $"ko.observable<{propertyType.Name}{nullableSymbol}>();";
+            return $"{propertyType.Name}{nullableSymbol}";
         }
 
         /// <summary>
