@@ -70,6 +70,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="HtmlHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TableBuilder\TableAttributeData.cs" />
     <Compile Include="TableBuilder\AttributeData.cs" />
     <Compile Include="TableBuilder\ColumnBuilder.cs" />
     <Compile Include="TableBuilder\ColumnPropertyBuilder.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="TableBuilder\TableColumn.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="KnockMvc.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

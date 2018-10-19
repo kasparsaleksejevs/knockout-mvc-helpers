@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Web;
 
@@ -11,6 +12,15 @@ namespace KnockMvc.TableHelper
         ITableBuilderOptions<TModel> FooterText(string footerText);
 
         ITableBuilderOptions<TModel> Css(string cssClass);
+
+        /// <summary>
+        /// Adds the HTML attribute with specified value expression to the table.
+        /// This method also accepts and adds the 'class' atribute even if the class property is already specified.
+        /// </summary>
+        /// <param name="attributeName">Name of the attribute.</param>
+        /// <param name="valueExpression">The value expression.</param>
+        /// <returns>Table builder instance.</returns>
+        ITableBuilderOptions<TModel> AddAttribute(string attributeName, Expression<Func<ICollection<TModel>, object>> valueExpression);
 
         /// <summary>
         /// Adds the custom header HTML row string before any other auto-generated header row.

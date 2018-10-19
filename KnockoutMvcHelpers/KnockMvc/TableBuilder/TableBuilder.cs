@@ -27,6 +27,8 @@ namespace KnockMvc.TableHelper
 
         private string customHeaderRow;
 
+        private List<TableAttributeData<TModel>> attributes = new List<TableAttributeData<TModel>>();
+
         public TableBuilder(HtmlHelper html, ICollection<TModel> model)
         {
             this.htmlHelper = html;
@@ -75,6 +77,24 @@ namespace KnockMvc.TableHelper
         public ITableBuilderOptions<TModel> Css(string cssClass)
         {
             this.tableCss = cssClass;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the HTML attribute with specified value expression to the table.
+        /// This method also accepts and adds the 'class' atribute even if the class property is already specified.
+        /// </summary>
+        /// <param name="attributeName">Name of the attribute.</param>
+        /// <param name="valueExpression">The value expression.</param>
+        /// <returns>Table builder instance.</returns>
+        public ITableBuilderOptions<TModel> AddAttribute(string attributeName, Expression<Func<ICollection<TModel>, object>> valueExpression)
+        {
+            this.attributes.Add(new TableAttributeData<TModel>
+            {
+                Name = attributeName,
+                Value = valueExpression.Compile()
+            });
+
             return this;
         }
 
@@ -251,8 +271,9 @@ namespace KnockMvc.TableHelper
                 footer = $"<tfoot><tr>{footer}</tr></tfoot>";
             }
 
-            var table = $"<table class=\"{this.tableCss}\"><thead>{theadRows}</thead>{footer}<tbody>{bodyRows}</tbody></table>";
-
+            var tableAttributes = this.GetTableAttributesString();
+            var tableCssAttribute = !string.IsNullOrEmpty(this.tableCss) ? $" class=\"{this.tableCss.Trim()}\"" : string.Empty;
+            var table = $"<table{tableCssAttribute}{tableAttributes}><thead>{theadRows}</thead>{footer}<tbody>{bodyRows}</tbody></table>";
             return table;
         }
 
@@ -281,6 +302,9 @@ namespace KnockMvc.TableHelper
                         {
                             if (attribute.Name.ToLower() == "class")
                             {
+                                if (cssClass == null)
+                                    cssClass = string.Empty;
+
                                 cssClass += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString());
                                 continue;
                             }
@@ -288,7 +312,7 @@ namespace KnockMvc.TableHelper
                             attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(row).ToString())}\"";
                         }
 
-                    cssClass = cssClass != null ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
+                    cssClass = !string.IsNullOrEmpty(cssClass) ? $" class=\"{cssClass.Trim()}\"" : string.Empty;
 
                     if (column.IsSpacer)
                     {
@@ -415,7 +439,10 @@ namespace KnockMvc.TableHelper
                 bodyRows += $"<tr>{bodyRow}</tr>";
             }
 
-            return $"<table class=\"{this.tableCss}\">{theadRows}<tbody>{bodyRows}</tbody></table>";
+            var tableAttributes = this.GetTableAttributesString();
+            var tableCssAttribute = !string.IsNullOrEmpty(this.tableCss) ? $" class=\"{this.tableCss.Trim()}\"" : string.Empty;
+            var table = $"<table{tableCssAttribute}{tableAttributes}>{theadRows}<tbody>{bodyRows}</tbody></table>";
+            return table;
         }
 
         internal void AddColumn<TProperty>(Expression<Func<TModel, TProperty>> expression)
@@ -427,6 +454,27 @@ namespace KnockMvc.TableHelper
         internal void AddColumn<TProperty>(ITableColumn<TModel> column)
         {
             this.columns.Add(column);
+        }
+
+        private string GetTableAttributesString()
+        {
+            var attributes = string.Empty;
+            if (this.attributes.Count > 0)
+                foreach (var attribute in this.attributes)
+                {
+                    if (attribute.Name.ToLower() == "class")
+                    {
+                        if (this.tableCss == null)
+                            this.tableCss = string.Empty;
+
+                        this.tableCss += " " + HttpUtility.HtmlAttributeEncode(attribute.Value(this.Model).ToString());
+                        continue;
+                    }
+
+                    attributes += $" {attribute.Name}=\"{HttpUtility.HtmlAttributeEncode(attribute.Value(this.Model).ToString())}\"";
+                }
+
+            return attributes;
         }
     }
 

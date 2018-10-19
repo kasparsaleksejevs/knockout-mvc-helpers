@@ -60,12 +60,12 @@
     col.Bind(m => m.DoubleValue).CssClass("test-class-green text-right").AddAttribute("class", m => "cl_" + m.IntValue).Template("{value}<sup>%</sup>").Format("P2").Footer(f => f.Sum(s => s.DoubleValue));
     col.Bind(m => m.DecimalValue).Format("N2").CssClass("text-right").FooterAvg().Template("{value}x");
     col.Bind(m => m.DateValue).Format("dd-MM-yyyy HH:mm:ss").Footer(z => "INT sum = " + Model.Sum(s => s.IntValue).ToString()).HeaderClass("borderz").CssClass("borderz");
-//col.AddSpacer("some spacing").CssClass("text-center sideways");
+    //col.AddSpacer("some spacing").CssClass("text-center sideways");
     col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
     col.Bind(m => m.NullableDecimalValue);
     col.Bind(m => m.EnumValue);
-}).FooterText("Total:").GroupBy(g => g.EnumValue)
+}).FooterText("Total:").GroupBy(g => g.EnumValue).AddAttribute("data-some-attr", m => "MyAttribute!")
 
 @Html.TableFor(Model).UseColumnsAsRows().Css("table table-striped table-bordered table-hover table-condensed customColumnTable").Columns(col =>
 {
@@ -79,5 +79,5 @@
     col.AddSpacer("some spacing").CssClass("text-center");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
     col.Bind(m => m.NullableDecimalValue);
-}).FooterText("Total:")
+}).FooterText("Total:").AddAttribute("data-some-values", m => m.Sum(s => s.IntValue))
 
