@@ -7,7 +7,7 @@
 	<Copyright>Copyright © 2018</Copyright>
 	<Description>Library to make writing UI tables easier using MVC5 HTML helpers</Description>
 	<Authors>Kaspars Aleksejevs</Authors>
-	<PackageId>KnockMVC</PackageId>
+	<PackageId>KnockMvc</PackageId>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
