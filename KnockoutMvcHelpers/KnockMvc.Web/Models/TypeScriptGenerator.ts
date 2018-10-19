@@ -5,7 +5,7 @@
         public static readonly ReadonlyStaticInt = 4200;
         public readonly ReadonlyStr = 'Readonly String';
         public readonly ReadonlyInt = 42;
-        public readonly ReadonlyDate = new Date('2018-06-18T22:08:22');
+        public readonly ReadonlyDate = new Date('2018-10-19T14:49:55');
         public readonly ReadonlyDecNull = null;
         public readonly ReadonlyDecOk = 42.56;
         public readonly ReadonlyBool = true;
@@ -88,12 +88,12 @@
         EnumValue: number;
     }
 
-    enum MyEnum {
+    export enum MyEnum {
         Val1 = 1,
         Val2 = 2,
     }
 
-    const MyEnumText = new Map<number, string>([
+    export const MyEnumText = new Map<number, string>([
         [MyEnum.Val1, 'Value 1'],
         [MyEnum.Val2, 'Other (Descr)'],
     ]);

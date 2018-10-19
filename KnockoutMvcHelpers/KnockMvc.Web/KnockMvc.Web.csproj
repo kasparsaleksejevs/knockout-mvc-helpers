@@ -266,7 +266,7 @@
       <Name>KnockMvc.TypeScriptGenerator</Name>
     </ProjectReference>
     <ProjectReference Include="..\KnockMvc\KnockMvc.csproj">
-      <Project>{f5e4ee0e-f696-445b-86bf-60261074a59b}</Project>
+      <Project>{9ea78124-934a-473a-94ba-2f07b030ad18}</Project>
       <Name>KnockMvc</Name>
     </ProjectReference>
   </ItemGroup>
