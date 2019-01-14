@@ -2,12 +2,18 @@
 
   <PropertyGroup>
 	<TargetFrameworks>net45;net46</TargetFrameworks>
-	<AssemblyVersion>0.3.0.0</AssemblyVersion>
+	<AssemblyVersion>1.0.30.0</AssemblyVersion>
 	<Company>Kaspars Aleksejevs</Company>
-	<Copyright>Copyright © 2018</Copyright>
+	<Copyright>Copyright © 2019</Copyright>
 	<Description>Library to make writing UI tables easier using MVC5 HTML helpers</Description>
 	<Authors>Kaspars Aleksejevs</Authors>
 	<PackageId>KnockMvc</PackageId>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Version>1.0.30</Version>
+	<PackageReleaseNotes>Fixed cell templating bug for null CellValue values</PackageReleaseNotes>
+	<RepositoryUrl>https://github.com/kasparsaleksejevs/knockout-mvc-helpers</RepositoryUrl>
+	<PackageProjectUrl>https://github.com/kasparsaleksejevs/knockout-mvc-helpers</PackageProjectUrl>
+	<PackageLicenseUrl>https://github.com/kasparsaleksejevs/knockout-mvc-helpers/blob/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
