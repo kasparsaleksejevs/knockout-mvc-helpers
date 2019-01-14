@@ -63,7 +63,7 @@
     //col.AddSpacer("some spacing").CssClass("text-center sideways");
     col.Bind(m => m.DateValue.ToString("yyyy-MM") + " - " + m.IntValue.ToString()).Title("Combination");
     col.Bind(m => (int)m.EnumValue + m.IntValue).Title("Enum(int)+int").FooterCssClass("footer-orange");
-    col.Bind(m => m.NullableDecimalValue);
+    col.Bind(m => m.NullableDecimalValue).Template("{value} X");
     col.Bind(m => m.EnumValue);
 }).FooterText("Total:").GroupBy(g => g.EnumValue).AddAttribute("data-some-attr", m => "MyAttribute!")
 
