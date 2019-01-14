@@ -224,7 +224,7 @@ namespace KnockMvc.TableHelper
                         }
 
                         var cellValue = this.columns[i].EvaluateFooter(this.Model);
-                        if (!string.IsNullOrEmpty(this.columns[i].Template))
+                        if (!string.IsNullOrEmpty(this.columns[i].Template) && !string.IsNullOrEmpty(cellValue))
                             cellValue = this.columns[i].Template.Replace(this.columns[i].TemplateSpecifier, cellValue);
 
                         footer += $"<td{cssClass}>{cellValue}</td>";
@@ -329,7 +329,7 @@ namespace KnockMvc.TableHelper
                     }
 
                     var cellValue = column.Evaluate(row);
-                    if (!string.IsNullOrEmpty(column.Template))
+                    if (!string.IsNullOrEmpty(column.Template) && !string.IsNullOrEmpty(cellValue))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
                     if (column.IsHeader)
@@ -387,7 +387,7 @@ namespace KnockMvc.TableHelper
                 {
                     var cssClass = column.CssClass;
                     var cellValue = column.Evaluate(row);
-                    if (!string.IsNullOrEmpty(column.Template))
+                    if (!string.IsNullOrEmpty(column.Template) && !string.IsNullOrEmpty(cellValue))
                         cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
                     var attributes = string.Empty;
@@ -419,7 +419,7 @@ namespace KnockMvc.TableHelper
                     if (column.FooterExpression != null)
                     {
                         var cellValue = column.EvaluateFooter(this.Model);
-                        if (!string.IsNullOrEmpty(column.Template))
+                        if (!string.IsNullOrEmpty(column.Template) && !string.IsNullOrEmpty(cellValue))
                             cellValue = column.Template.Replace(column.TemplateSpecifier, cellValue);
 
                         bodyRow += $"<td{footerCssClass}>{cellValue}</td>";
